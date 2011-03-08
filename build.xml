@@ -1,4 +1,4 @@
-<project default="clean-build">
+<project name="android-support-v4-googlemaps" default="clean-build">
     <property name="src.dir" value="src" />
     <property name="build.dir" value="build" />
     <property name="jar.file" value="${build.dir}/jar/android-support-v4-googlemaps.jar" />
