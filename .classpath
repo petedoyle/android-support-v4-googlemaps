@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src/honeycomb"/>
+	<classpathentry kind="src" path="src/java"/>
+	<classpathentry kind="var" path="JRE_LIB" sourcepath="JRE_SRC"/>
+	<classpathentry kind="lib" path="lib/maps-11.jar"/>
+	<classpathentry kind="lib" path="lib/android-11.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
