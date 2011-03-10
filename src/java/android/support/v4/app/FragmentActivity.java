@@ -642,7 +642,7 @@ public class FragmentActivity extends MapActivity {
         if ((requestCode&0xffff0000) != 0) {
             throw new IllegalArgumentException("Can only use lower 16 bits for requestCode");
         }
-        super.startActivityForResult(intent, (fragment.mIndex+1)<<16 + (requestCode*0xffff));
+        super.startActivityForResult(intent, ((fragment.mIndex+1)<<16) + (requestCode&0xffff));
     }
     
     void invalidateFragmentIndex(int index) {
