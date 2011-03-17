@@ -15,6 +15,7 @@ Alternatively, the source also includes an Eclipse project which you can use to 
 
 ## Other changes
 Besides making FragmentActivity extend MapActivity, the following has been changed from the original Android Compatibility Package r1:
+
 * Fix [Issue 15394](http://code.google.com/p/android/issues/detail?id=15394): Fragment.onActivityResult not called when requestCode != 0  (also see [this](https://groups.google.com/d/topic/android-developers/NiM_dAOtXQU/discussion) android-developers thread).
 
 ## Limitations
