@@ -5,11 +5,9 @@ A port of the Android Compatibility package, revision 1 which makes FragmentActi
 ## Building
 You can build the jar (`android-support-v4-googlemaps.jar`) using [Ant](http://ant.apache.org).
 
-```text
-git clone git://github.com/petedoyle/android-support-v4-googlemaps.git
-cd android-support-v4-googlemaps
-ant
-```
+    git clone git://github.com/petedoyle/android-support-v4-googlemaps.git
+    cd android-support-v4-googlemaps
+    ant
 
 The default Ant target will build the jar and place it in the `android-support-v4-googlemaps/build/jar` folder.
 
