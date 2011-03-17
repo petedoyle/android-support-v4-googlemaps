@@ -12,3 +12,12 @@ You can build the jar (`android-support-v4-googlemaps.jar`) using [Ant](http://a
 The default Ant target will build the jar and place it in the `android-support-v4-googlemaps/build/jar` folder.
 
 Alternatively, the source also includes an Eclipse project which you can use to add it as a build dependency for your project.  Import it into Eclipse using `File > Import > Existing Projects into Workspace...`, then configure the build path of your project to require the `android-support-v4-googlemaps` project.
+
+## Other changes
+Besides making FragmentActivity extend MapActivity, the following has been changed from the original Android Compatibility Package r1:
+* Fix [Issue 15394](http://code.google.com/p/android/issues/detail?id=15394): Fragment.onActivityResult not called when requestCode != 0  (also see [this](https://groups.google.com/d/topic/android-developers/NiM_dAOtXQU/discussion) android-developers thread).
+
+## Limitations
+Currently, one downside is that ALL classes extending FragmentActivity are MapActivity's.  Its possible to make a separate class (i.e. FragmentMapActivity), but it requires some refactoring of the FragmentActivity code.
+
+Feel free to file a bug to request it or fork this project to fix it.
