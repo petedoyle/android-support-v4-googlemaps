@@ -61,6 +61,7 @@ public class CursorLoader extends AsyncTaskLoader<Cursor> {
      * when the cursor needs to be refreshed.
      */
     void registerContentObserver(Cursor cursor, ContentObserver observer) {
+        cursor.setNotificationUri( getContext().getContentResolver(), mUri );
         cursor.registerContentObserver(mObserver);
     }
 
