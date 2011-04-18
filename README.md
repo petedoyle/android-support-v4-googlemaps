@@ -22,3 +22,6 @@ Besides making FragmentActivity extend MapActivity, the following has been chang
 Currently, one downside is that ALL classes extending FragmentActivity are MapActivity's.  Its possible to make a separate class (i.e. FragmentMapActivity), but it requires some refactoring of the FragmentActivity code.
 
 Feel free to file a bug to request it or fork this project to fix it.
+
+## Getting Help
+Need help?  Check out this project's [Google Group](http://groups.google.com/group/android-support-v4-googlemaps-support).
