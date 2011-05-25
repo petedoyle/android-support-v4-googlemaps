@@ -15,7 +15,7 @@
 
     <target name="compile">
         <mkdir dir="build/classes"/>
-        <javac srcdir="${src.dir}" destdir="${build.dir}/classes">
+        <javac srcdir="${src.dir}" destdir="${build.dir}/classes" includeantruntime="false">
             <include name="java/**/*.java"/>
             <include name="honeycomb/**/*.java"/>
             <classpath refid="classpath"/>
