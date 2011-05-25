@@ -16,6 +16,7 @@
 
 package android.support.v4.app;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -36,8 +37,6 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import com.google.android.maps.MapActivity;
 
 /**
  * Base class for activities that want to use the support-based Fragment and
@@ -60,7 +59,7 @@ import com.google.android.maps.MapActivity;
  * state, this may be a snapshot slightly before what the user last saw.</p>
  * </ul>
  */
-public class FragmentActivity extends MapActivity {
+public class FragmentActivity extends Activity {
     private static final String TAG = "FragmentActivity";
     
     private static final String FRAGMENTS_TAG = "android:support:fragments";
@@ -254,7 +253,7 @@ public class FragmentActivity extends MapActivity {
             fragment.mInLayout = true;
             fragment.mImmediateActivity = this;
             fragment.mFragmentManager = mFragments;
-            fragment.onInflate(attrs, fragment.mSavedFragmentState);
+            fragment.onInflate(this, attrs, fragment.mSavedFragmentState);
             mFragments.addFragment(fragment, true);
 
         } else if (fragment.mInLayout) {
@@ -273,7 +272,7 @@ public class FragmentActivity extends MapActivity {
             // from last saved state), then give it the attributes to
             // initialize itself.
             if (!fragment.mRetaining) {
-                fragment.onInflate(attrs, fragment.mSavedFragmentState);
+                fragment.onInflate(this, attrs, fragment.mSavedFragmentState);
             }
             mFragments.moveToState(fragment);
         }
@@ -645,7 +644,7 @@ public class FragmentActivity extends MapActivity {
         super.startActivityForResult(intent, ((fragment.mIndex+1)<<16) + (requestCode&0xffff));
     }
     
-    void invalidateFragmentIndex(int index) {
+    void invalidateSupportFragmentIndex(int index) {
         //Log.v(TAG, "invalidateFragmentIndex: index=" + index);
         if (mAllLoaderManagers != null) {
             LoaderManagerImpl lm = mAllLoaderManagers.get(index);
@@ -687,9 +686,4 @@ public class FragmentActivity extends MapActivity {
         }
         return lm;
     }
-
-	@Override
-	protected boolean isRouteDisplayed() {
-		return false;
-	}
 }
