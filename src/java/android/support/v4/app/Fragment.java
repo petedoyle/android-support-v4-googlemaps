@@ -52,6 +52,7 @@ final class FragmentState implements Parcelable {
     final int mContainerId;
     final String mTag;
     final boolean mRetainInstance;
+    final boolean mDetached;
     final Bundle mArguments;
     
     Bundle mSavedFragmentState;
@@ -66,6 +67,7 @@ final class FragmentState implements Parcelable {
         mContainerId = frag.mContainerId;
         mTag = frag.mTag;
         mRetainInstance = frag.mRetainInstance;
+        mDetached = frag.mDetached;
         mArguments = frag.mArguments;
     }
     
@@ -77,6 +79,7 @@ final class FragmentState implements Parcelable {
         mContainerId = in.readInt();
         mTag = in.readString();
         mRetainInstance = in.readInt() != 0;
+        mDetached = in.readInt() != 0;
         mArguments = in.readBundle();
         mSavedFragmentState = in.readBundle();
     }
@@ -103,6 +106,7 @@ final class FragmentState implements Parcelable {
         mInstance.mContainerId = mContainerId;
         mInstance.mTag = mTag;
         mInstance.mRetainInstance = mRetainInstance;
+        mInstance.mDetached = mDetached;
         mInstance.mFragmentManager = activity.mFragments;
         
         return mInstance;
@@ -120,6 +124,7 @@ final class FragmentState implements Parcelable {
         dest.writeInt(mContainerId);
         dest.writeString(mTag);
         dest.writeInt(mRetainInstance ? 1 : 0);
+        dest.writeInt(mDetached ? 1 : 0);
         dest.writeBundle(mArguments);
         dest.writeBundle(mSavedFragmentState);
     }
@@ -150,8 +155,9 @@ public class Fragment implements ComponentCallbacks, OnCreateContextMenuListener
     static final int INITIALIZING = 0;     // Not yet created.
     static final int CREATED = 1;          // Created.
     static final int ACTIVITY_CREATED = 2; // The activity has finished its creation.
-    static final int STARTED = 3;          // Created and started, not resumed.
-    static final int RESUMED = 4;          // Created started and resumed.
+    static final int STOPPED = 3;          // Fully created, not started.
+    static final int STARTED = 4;          // Created and started, not resumed.
+    static final int RESUMED = 5;          // Created started and resumed.
     
     int mState = INITIALIZING;
     
@@ -179,6 +185,9 @@ public class Fragment implements ComponentCallbacks, OnCreateContextMenuListener
 
     // Target fragment.
     Fragment mTarget;
+
+    // For use when retaining a fragment: this is the index of the last mTarget.
+    int mTargetIndex = -1;
 
     // Target request code.
     int mTargetRequestCode;
@@ -233,6 +242,9 @@ public class Fragment implements ComponentCallbacks, OnCreateContextMenuListener
     // from the user.
     boolean mHidden;
     
+    // Set to true when the app has requested that this fragment be deactivated.
+    boolean mDetached;
+
     // If set this fragment would like its instance retained across
     // configuration changes.
     boolean mRetainInstance;
@@ -262,6 +274,47 @@ public class Fragment implements ComponentCallbacks, OnCreateContextMenuListener
     boolean mLoadersStarted;
     boolean mCheckedForLoaderManager;
     
+    /**
+     * State information that has been retrieved from a fragment instance
+     * through {@link FragmentManager#saveFragmentInstanceState(Fragment)
+     * FragmentManager.saveFragmentInstanceState}.
+     */
+    public static class SavedState implements Parcelable {
+        final Bundle mState;
+
+        SavedState(Bundle state) {
+            mState = state;
+        }
+
+        SavedState(Parcel in, ClassLoader loader) {
+            mState = in.readBundle();
+            if (loader != null && mState != null) {
+                mState.setClassLoader(loader);
+            }
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeBundle(mState);
+        }
+
+        public static final Parcelable.Creator<SavedState> CREATOR
+                = new Parcelable.Creator<SavedState>() {
+            public SavedState createFromParcel(Parcel in) {
+                return new SavedState(in, null);
+            }
+
+            public SavedState[] newArray(int size) {
+                return new SavedState[size];
+            }
+        };
+    }
+
     /**
      * Thrown by {@link Fragment#instantiate(Context, String, Bundle)} when
      * there is an instantiation failure.
@@ -343,23 +396,22 @@ public class Fragment implements ComponentCallbacks, OnCreateContextMenuListener
         }
     }
     
-    void restoreViewState() {
+    final void restoreViewState() {
         if (mSavedViewState != null) {
             mInnerView.restoreHierarchyState(mSavedViewState);
             mSavedViewState = null;
         }
     }
     
-    void setIndex(int index) {
+    final void setIndex(int index) {
         mIndex = index;
         mWho = "android:fragment:" + mIndex;
-   }
-    
-    void clearIndex() {
-        mIndex = -1;
-        mWho = null;
     }
     
+    final boolean isInBackStack() {
+        return mBackStackNesting > 0;
+    }
+
     /**
      * Subclasses can not override equals().
      */
@@ -430,6 +482,22 @@ public class Fragment implements ComponentCallbacks, OnCreateContextMenuListener
      */
     final public Bundle getArguments() {
         return mArguments;
+    }
+
+    /**
+     * Set the initial saved state that this Fragment should restore itself
+     * from when first being constructed, as returned by
+     * {@link FragmentManager#saveFragmentInstanceState(Fragment)
+     * FragmentManager.saveFragmentInstanceState}.
+     *
+     * @param state The state the fragment should be restored from.
+     */
+    public void setInitialSavedState(SavedState state) {
+        if (mIndex >= 0) {
+            throw new IllegalStateException("Fragment already active");
+        }
+        mSavedFragmentState = state != null && state.mState != null
+                ? state.mState : null;
     }
 
     /**
@@ -528,6 +596,15 @@ public class Fragment implements ComponentCallbacks, OnCreateContextMenuListener
      */
     final public boolean isAdded() {
         return mActivity != null && mAdded;
+    }
+
+    /**
+     * Return true if the fragment has been explicitly detached from the UI.
+     * That is, {@link FragmentTransaction#detach(Fragment)
+     * FragmentTransaction.detach(Fragment)} has been used on it.
+     */
+    final public boolean isDetached() {
+        return mDetached;
     }
 
     /**
@@ -794,6 +871,19 @@ public class Fragment implements ComponentCallbacks, OnCreateContextMenuListener
     }
     
     /**
+     * Called immediately after {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}
+     * has returned, but before any saved state has been restored in to the view.
+     * This gives subclasses a chance to initialize themselves once
+     * they know their view hierarchy has been completely created.  The fragment's
+     * view hierarchy is not however attached to its parent at this point.
+     * @param view The View returned by {@link #onCreateView(LayoutInflater, ViewGroup, Bundle)}.
+     * @param savedInstanceState If non-null, this fragment is being re-constructed
+     * from a previous saved state as given here.
+     */
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+    }
+
+    /**
      * Get the root view for the fragment's layout (the one returned by {@link #onCreateView}),
      * if provided.
      * 
@@ -926,6 +1016,35 @@ public class Fragment implements ComponentCallbacks, OnCreateContextMenuListener
         if (mLoaderManager != null) {
             mLoaderManager.doDestroy();
         }
+    }
+
+    /**
+     * Called by the fragment manager once this fragment has been removed,
+     * so that we don't have any left-over state if the application decides
+     * to re-use the instance.  This only clears state that the framework
+     * internally manages, not things the application sets.
+     */
+    void initState() {
+        mIndex = -1;
+        mWho = null;
+        mAdded = false;
+        mRemoving = false;
+        mResumed = false;
+        mFromLayout = false;
+        mInLayout = false;
+        mRestored = false;
+        mBackStackNesting = 0;
+        mFragmentManager = null;
+        mActivity = mImmediateActivity = null;
+        mFragmentId = 0;
+        mContainerId = 0;
+        mTag = null;
+        mHidden = false;
+        mDetached = false;
+        mRetaining = false;
+        mLoaderManager = null;
+        mLoadersStarted = false;
+        mCheckedForLoaderManager = false;
     }
 
     /**
@@ -1103,6 +1222,7 @@ public class Fragment implements ComponentCallbacks, OnCreateContextMenuListener
                 writer.print(" mFromLayout="); writer.print(mFromLayout);
                 writer.print(" mInLayout="); writer.println(mInLayout);
         writer.print(prefix); writer.print("mHidden="); writer.print(mHidden);
+                writer.print(" mDetached="); writer.print(mDetached);
                 writer.print(" mRetainInstance="); writer.print(mRetainInstance);
                 writer.print(" mRetaining="); writer.print(mRetaining);
                 writer.print(" mHasMenu="); writer.println(mHasMenu);
@@ -1157,6 +1277,13 @@ public class Fragment implements ComponentCallbacks, OnCreateContextMenuListener
         }
     }
 
+    void performStart() {
+        onStart();
+        if (mLoaderManager != null) {
+            mLoaderManager.doReportStart();
+        }
+    }
+
     void performStop() {
         onStop();
     }
@@ -1175,6 +1302,13 @@ public class Fragment implements ComponentCallbacks, OnCreateContextMenuListener
                     mLoaderManager.doRetain();
                 }
             }
+        }
+    }
+
+    void performDestroyView() {
+        onDestroyView();
+        if (mLoaderManager != null) {
+            mLoaderManager.doReportNextStart();
         }
     }
 }
