@@ -18,6 +18,7 @@ Alternatively, the source also includes an Eclipse project which you can use to 
 
 ## Changelog
 July 22, 2011 - Released `android-support-v4-r3-googlemaps.jar` based on revision 3 of the Android Compatibility Library (see downloads).  `FragmentPagerAdapter` and `FragmentStatePagerAdapter` are also included from the new `android.support.v13` package.
+
 May 24, 2011 - Released `android-support-v4-r2-googlemaps.jar` based on revision 2 of the Android Compatibility Library (see downloads).
 
 ## Limitations
