@@ -1,34 +1,34 @@
 <project name="android-support-v4-googlemaps" default="clean-build">
-    <property name="src.dir" value="src" />
-    <property name="build.dir" value="build" />
-    <property name="jar.file" value="${build.dir}/jar/android-support-v4-r3-googlemaps.jar" />
+	<property name="src.dir" value="src" />
+	<property name="build.dir" value="build" />
+	<property name="jar.file" value="${build.dir}/jar/android-support-v4-r3-googlemaps.jar" />
 
-    <path id="classpath">
-      <fileset dir="lib">
-        <include name="**/*.jar"/>
-      </fileset>
-    </path>
+	<path id="classpath">
+		<fileset dir="lib">
+			<include name="**/*.jar"/>
+		</fileset>
+	</path>
 
-    <target name="clean">
-        <delete dir="${build.dir}"/>
-    </target>
+	<target name="clean">
+		<delete dir="${build.dir}"/>
+	</target>
 
-    <target name="compile">
-        <mkdir dir="build/classes"/>
-        <javac srcdir="${src.dir}" destdir="${build.dir}/classes" includeantruntime="false">
-            <include name="java/**/*.java"/>
-            <include name="eclair/**/*.java"/>
-            <include name="froyo/**/*.java"/>
-            <include name="honeycomb/**/*.java"/>
-            <include name="honeycomb_mr2/**/*.java"/>
-            <classpath refid="classpath"/>
-        </javac>
-    </target>
+	<target name="compile">
+		<mkdir dir="build/classes"/>
+		<javac srcdir="${src.dir}" destdir="${build.dir}/classes" includeantruntime="false">
+			<include name="java/**/*.java"/>
+			<include name="eclair/**/*.java"/>
+			<include name="froyo/**/*.java"/>
+			<include name="honeycomb/**/*.java"/>
+			<include name="honeycomb_mr2/**/*.java"/>
+			<classpath refid="classpath"/>
+		</javac>
+	</target>
 
-    <target name="jar">
-        <mkdir dir="${build.dir}/jar"/>
-        <jar destfile="${jar.file}" basedir="build/classes" />
-    </target>
+	<target name="jar">
+		<mkdir dir="${build.dir}/jar"/>
+		<jar destfile="${jar.file}" basedir="build/classes" />
+	</target>
 
-    <target name="clean-build" depends="clean,compile,jar" />
+	<target name="clean-build" depends="clean,compile,jar" />
 </project>
