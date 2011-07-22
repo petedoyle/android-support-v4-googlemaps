@@ -17,7 +17,10 @@
         <mkdir dir="build/classes"/>
         <javac srcdir="${src.dir}" destdir="${build.dir}/classes" includeantruntime="false">
             <include name="java/**/*.java"/>
+            <include name="eclair/**/*.java"/>
+            <include name="froyo/**/*.java"/>
             <include name="honeycomb/**/*.java"/>
+            <include name="honeycomb_mr2/**/*.java"/>
             <classpath refid="classpath"/>
         </javac>
     </target>
