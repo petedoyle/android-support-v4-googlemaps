@@ -1,2 +1,11 @@
 build/*
 bin/*
+
+src/samples/FragmentLayoutMaps/local.properties
+src/samples/FragmentLayoutMaps/build/*
+src/samples/FragmentLayoutMaps/bin/*
+src/samples/FragmentLayoutMaps/gen/*
+
+# ignore vim temp files
+~*
+*.swp
