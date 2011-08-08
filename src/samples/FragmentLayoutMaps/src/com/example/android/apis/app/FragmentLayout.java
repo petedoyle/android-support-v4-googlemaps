@@ -19,12 +19,11 @@ package com.example.android.apis.app;
 import com.example.android.apis.R;
 import com.example.android.apis.Shakespeare;
 
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
-import android.app.ListFragment;
-import android.content.Intent;
-import android.content.res.Configuration;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.ListFragment;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -40,69 +39,86 @@ import android.widget.TextView;
  * This sample provides a different layout (and activity flow) when run in
  * landscape.
  */
-public class FragmentLayout extends Activity {
-
+public class FragmentLayout extends FragmentActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
 		setContentView(R.layout.fragment_layout);
+		
+		// Check to see if we have a frame in which to embed the details
+		// fragment directly in the containing UI.
+		View detailsFrame = findViewById(R.id.details);
+		boolean dualPane = detailsFrame != null && detailsFrame.getVisibility() == View.VISIBLE;
+
+		// Decide where to place TitlesFragment.
+		// See fragment_layout.xml in res/layout/ and res/layout-land/ to see the difference
+		int targetLayout = dualPane ? R.id.titles : R.id.main;
+		
+		// do not add to backstack, or user will be able to press back and
+		// view the blank layout with nothing in it (a blank screen).
+		// In this case, we want the back button to exit the app.
+		getSupportFragmentManager()
+			.beginTransaction()
+			.add( targetLayout, TitlesFragment.newInstance( dualPane ) )
+			.setTransition( FragmentTransaction.TRANSIT_FRAGMENT_OPEN )
+			.commit();
+		
+		//TODO: There's still a bug.  To reproduce:
+		// 1) Start app in portrait mode.
+		// 2) Flip to landscape.
+		// 3) Flip back to portrait.
+		// 4) Select an item (item displays fine)
+		// 5) Press back
+		// 6) Select another item
+		//    RESULT:   Both the details and list view display on top of each other
+		//    EXPECTED: The details should show without the list
 	}
-
-
-	/**
-	 * This is a secondary activity, to show what the user has selected
-	 * when the screen is not large enough to show it all in one activity.
-	 */
-
-	public static class DetailsActivity extends Activity {
-
-		@Override
-		protected void onCreate(Bundle savedInstanceState) {
-			super.onCreate(savedInstanceState);
-
-			if (getResources().getConfiguration().orientation
-					== Configuration.ORIENTATION_LANDSCAPE) {
-				// If the screen is now in landscape mode, we can show the
-				// dialog in-line with the list so we don't need this activity.
-				finish();
-				return;
-			}
-
-			if (savedInstanceState == null) {
-				// During initial setup, plug in the details fragment.
-				DetailsFragment details = new DetailsFragment();
-				details.setArguments(getIntent().getExtras());
-				getFragmentManager().beginTransaction().add(android.R.id.content, details).commit();
-			}
-		}
-	}
-
 
 	/**
 	 * This is the "top-level" fragment, showing a list of items that the
 	 * user can pick.  Upon picking an item, it takes care of displaying the
 	 * data to the user as appropriate based on the currrent UI layout.
 	 */
-
 	public static class TitlesFragment extends ListFragment {
+		private static final String ARG_DUAL_PANE = "isDualPane";
+		
 		boolean mDualPane;
 		int mCurCheckPosition = 0;
 		int mShownCheckPosition = -1;
 
+		public static TitlesFragment newInstance(boolean isDualPane) {
+			TitlesFragment fragment = new TitlesFragment();
+			
+			Bundle args = new Bundle();
+			args.putBoolean( ARG_DUAL_PANE, isDualPane );
+			fragment.setArguments( args );
+			
+			return fragment;
+		}
+		
+		@Override
+		public void onCreate(Bundle savedInstanceState) {
+			super.onCreate( savedInstanceState );
+			mDualPane = getArguments().getBoolean( ARG_DUAL_PANE );
+		}
+		
 		@Override
 		public void onActivityCreated(Bundle savedInstanceState) {
 			super.onActivityCreated(savedInstanceState);
+			
+			int adapterRowLayoutId = -1;
+			if( android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB ) {
+				// Crashes below honeycomb: "IllegalStateException: ArrayAdapter requires the resource ID to be a TextView"
+				adapterRowLayoutId = android.R.layout.simple_list_item_activated_1;
+			} else {
+				adapterRowLayoutId = android.R.layout.simple_list_item_1;
+			}
 
 			// Populate list with our static array of titles.
 			setListAdapter(new ArrayAdapter<String>(getActivity(),
-					android.R.layout.simple_list_item_activated_1, Shakespeare.TITLES));
-
-			// Check to see if we have a frame in which to embed the details
-			// fragment directly in the containing UI.
-			View detailsFrame = getActivity().findViewById(R.id.details);
-			mDualPane = detailsFrame != null && detailsFrame.getVisibility() == View.VISIBLE;
+					adapterRowLayoutId, Shakespeare.TITLES));
 
 			if (savedInstanceState != null) {
 				// Restore last state for checked position.
@@ -138,6 +154,7 @@ public class FragmentLayout extends Activity {
 		void showDetails(int index) {
 			mCurCheckPosition = index;
 
+			FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
 			if (mDualPane) {
 				// We can display everything in-place with fragments, so update
 				// the list to highlight the selected item and show the data.
@@ -150,20 +167,21 @@ public class FragmentLayout extends Activity {
 
 					// Execute a transaction, replacing any existing fragment
 					// with this one inside the frame.
-					FragmentTransaction ft = getFragmentManager().beginTransaction();
-					ft.replace(R.id.details, df);
+					FragmentTransaction ft = fragmentManager.beginTransaction();
+					ft.replace(R.id.details, df, "DetailsFragment");
 					ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 					ft.commit();
 					mShownCheckPosition = index;
 				}
 
 			} else {
-				// Otherwise we need to launch a new activity to display
-				// the dialog fragment with selected text.
-				Intent intent = new Intent();
-				intent.setClass(getActivity(), DetailsActivity.class);
-				intent.putExtra("index", index);
-				startActivity(intent);
+				DetailsFragment details = DetailsFragment.newInstance( index );
+				
+				FragmentTransaction ft = fragmentManager.beginTransaction();
+				ft.replace(R.id.main, details);
+				ft.setTransition( FragmentTransaction.TRANSIT_FRAGMENT_FADE );
+				ft.addToBackStack( null );
+				ft.commit();
 			}
 		}
 	}
