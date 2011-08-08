@@ -16,8 +16,12 @@
 
 package com.example.android.apis.app;
 
+import com.example.android.apis.Locations;
+import com.example.android.apis.Locations.Entry;
 import com.example.android.apis.R;
-import com.example.android.apis.Shakespeare;
+import com.google.android.maps.GeoPoint;
+import com.google.android.maps.MapController;
+import com.google.android.maps.MapView;
 
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.Fragment;
@@ -25,14 +29,11 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
 import android.os.Bundle;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.ScrollView;
-import android.widget.TextView;
 
 /**
  * Demonstration of using fragments to implement different activity layouts.
@@ -41,6 +42,17 @@ import android.widget.TextView;
  */
 public class FragmentLayout extends FragmentActivity {
 
+	// Only one MapView instance is allowed per MapActivity,
+	// so we inflate them in the MapActivity and tie their 
+	// lifetime here to the MapActivity.  Package scope
+	// so we can grab them from different instances of map 
+	// fragments.
+	//
+	// The other option was to make them static, but that causes
+	// memory leaks on screen rotation.
+	View mMapViewContainer;
+	MapView mMapView;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -64,6 +76,9 @@ public class FragmentLayout extends FragmentActivity {
 			.add( targetLayout, TitlesFragment.newInstance( dualPane ) )
 			.setTransition( FragmentTransaction.TRANSIT_FRAGMENT_OPEN )
 			.commit();
+		
+		mMapViewContainer = LayoutInflater.from( this ).inflate( R.layout.mapview, null );
+		mMapView = (MapView)mMapViewContainer.findViewById( R.id.map );
 		
 		//TODO: There's still a bug.  To reproduce:
 		// 1) Start app in portrait mode.
@@ -118,7 +133,7 @@ public class FragmentLayout extends FragmentActivity {
 
 			// Populate list with our static array of titles.
 			setListAdapter(new ArrayAdapter<String>(getActivity(),
-					adapterRowLayoutId, Shakespeare.TITLES));
+					adapterRowLayoutId, Locations.NAMES));
 
 			if (savedInstanceState != null) {
 				// Restore last state for checked position.
@@ -130,7 +145,7 @@ public class FragmentLayout extends FragmentActivity {
 				// In dual-pane mode, the list view highlights the selected item.
 				getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 				// Make sure our UI is in the correct state.
-				showDetails(mCurCheckPosition);
+				showMap(mCurCheckPosition);
 			}
 		}
 
@@ -143,15 +158,15 @@ public class FragmentLayout extends FragmentActivity {
 
 		@Override
 		public void onListItemClick(ListView l, View v, int position, long id) {
-			showDetails(position);
+			showMap(position);
 		}
 
 		/**
-		 * Helper function to show the details of a selected item, either by
+		 * Helper function to show the map of a selected item, either by
 		 * displaying a fragment in-place in the current UI, or starting a
 		 * whole new activity in which it is displayed.
 		 */
-		void showDetails(int index) {
+		void showMap(int index) {
 			mCurCheckPosition = index;
 
 			FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
@@ -163,19 +178,19 @@ public class FragmentLayout extends FragmentActivity {
 				if (mShownCheckPosition != mCurCheckPosition) {
 					// If we are not currently showing a fragment for the new
 					// position, we need to create and install a new one.
-					DetailsFragment df = DetailsFragment.newInstance(index);
+					MapFragment df = MapFragment.newInstance(index);
 
 					// Execute a transaction, replacing any existing fragment
 					// with this one inside the frame.
 					FragmentTransaction ft = fragmentManager.beginTransaction();
-					ft.replace(R.id.details, df, "DetailsFragment");
+					ft.replace(R.id.details, df);
 					ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
 					ft.commit();
 					mShownCheckPosition = index;
 				}
 
 			} else {
-				DetailsFragment details = DetailsFragment.newInstance( index );
+				MapFragment details = MapFragment.newInstance( index );
 				
 				FragmentTransaction ft = fragmentManager.beginTransaction();
 				ft.replace(R.id.main, details);
@@ -186,19 +201,18 @@ public class FragmentLayout extends FragmentActivity {
 		}
 	}
 
-
-	/**
-	 * This is the secondary fragment, displaying the details of a particular
-	 * item.
-	 */
-
-	public static class DetailsFragment extends Fragment {
+	public static class MapFragment extends Fragment {
+		private View mMapViewContainer;
+		private MapView mMapView;
+		
+		private MapController mMapController;
+		
 		/**
-		 * Create a new instance of DetailsFragment, initialized to
-		 * show the text at 'index'.
+		 * Create a new instance of MapFragment, initialized to
+		 * show the location Entry at 'index'.
 		 */
-		public static DetailsFragment newInstance(int index) {
-			DetailsFragment f = new DetailsFragment();
+		public static MapFragment newInstance(int index) {
+			MapFragment f = new MapFragment();
 
 			// Supply index input as an argument.
 			Bundle args = new Bundle();
@@ -207,30 +221,62 @@ public class FragmentLayout extends FragmentActivity {
 
 			return f;
 		}
-
+		
 		@Override
-		public View onCreateView(LayoutInflater inflater, ViewGroup container,
-				Bundle savedInstanceState) {
-			if (container == null) {
-				// We have different layouts, and in one of them this
-				// fragment's containing frame doesn't exist.  The fragment
-				// may still be created from its saved state, but there is
-				// no reason to try to create its view hierarchy because it
-				// won't be displayed.  Note this is not needed -- we could
-				// just run the code below, where we would create and return
-				// the view hierarchy; it would just never be used.
-				return null;
-			}
+		public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+			super.onCreateView( inflater, container, savedInstanceState );
 
-			ScrollView scroller = new ScrollView(getActivity());
-			TextView text = new TextView(getActivity());
-			int padding = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-					4, getActivity().getResources().getDisplayMetrics());
-			text.setPadding(padding, padding, padding, padding);
-			scroller.addView(text);
-			text.setText(Shakespeare.DIALOGUE[getArguments().getInt("index", 0)]);
-			return scroller;
+			/*	We've tied the MapView's lifecycle to the MapActivity (FragmentLayout
+				extends FragmentActivity which extends MapActivity (in the
+				android-support-v4-googlemaps library)).
+				
+				Unfortunately we have to grab a reference to it here, which means
+				we have to have a reference to FragmentLayout (a _specific_ 
+				implementation of FragmentActivity).  This is a hack.
+				
+				We could "inject" (or pass in) these via MapFragment's constructor,
+				but it seems to break the general usage pattern of Fragments (i.e.
+				pass in a Bundle of arguments, each of which is Parcelable / Serializable).
+			
+				I chose to do call up to FragmentLayout to do this, but injecting
+				the references into the constructor might be better.  Its up to you.
+			 * 
+			 */
+			FragmentLayout mapActivity = (FragmentLayout) getActivity();
+			mMapViewContainer = mapActivity.mMapViewContainer;
+			mMapView = mapActivity.mMapView;
+			if( null != mMapView ) {
+				int index = getArguments().getInt( "index" );
+				Entry e = Locations.ENTRIES[index];
+				
+				mMapView.setBuiltInZoomControls( true );
+				mMapView.setSatellite( true );
+				
+				mMapController = mMapView.getController();
+				mMapController.animateTo( new GeoPoint( (int)(e.lat * 1.0e6), (int)(e.lng * 1.0e6) ) );
+				mMapController.setZoom( e.zoomLevel );
+			}
+			
+			return mMapViewContainer;
+		}
+		
+		@Override
+		public void onDestroyView() {
+			super.onDestroyView();
+
+			// The way MainActivity creates this fragment, it will call onCreateView()
+			// each time we start (or navigate back to) this map.  To prevent the
+			// "You are only allowed to have a single MapView in a MapActivity" message,
+			// we only inflate the map's XML layout once.  When we try to add it a second
+			// time, we get "IllegalStateException: The specified child already has a 
+			// parent. You must call removeView() on the child's parent first."
+			// So, here we remove the view from MainActivity's parent layout
+			// so we can re-add it later when onCreateView() is called.
+			// TODO: change this once the map doesn't go away (i.e. on Tablets)
+			ViewGroup parentViewGroup = (ViewGroup) mMapViewContainer.getParent();
+			if( null != parentViewGroup ) {
+				parentViewGroup.removeView( mMapViewContainer );
+			}
 		}
 	}
-
 }
