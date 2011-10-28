@@ -17,13 +17,16 @@ The default Ant target will build the jar and place it in the `build/jar` folder
 Alternatively, the source also includes an Eclipse project which you can use to add it as a build dependency for your project.  Import it into Eclipse using `File > Import > Existing Projects into Workspace...`, then configure the build path of your project to require the `android-support-v4-googlemaps` project.
 
 ## Changelog
-* October 27, 2011 - Released `android-support-v4-r4-googlemaps.jar` and `android-support-v13-r4-googlemaps.jar` based on revision 4 of the Android Compatibility Library.  This release, like the official release from Google, splits the ACL into two jars (v4 and v13).  The v13 jar contains all the v4 classes _plus_ the classes in the `android.support.v13` package.
+### October 27, 2011
+Released `android-support-v4-r4-googlemaps.jar` and `android-support-v13-r4-googlemaps.jar` based on revision 4 of the Android Compatibility Library.  This release, like the official release from Google, splits the ACL into two jars (v4 and v13).  The v13 jar contains all the v4 classes _plus_ the classes in the `android.support.v13` package.
 
-For the changelog of what changed in ACL r4, see [http://developer.android.com/sdk/compatibility-library.html].
+For the changelog of what changed in ACL r4, see http://developer.android.com/sdk/compatibility-library.html.
 
-* July 22, 2011 - Released `android-support-v4-r3-googlemaps.jar` based on revision 3 of the Android Compatibility Library (see downloads).  `FragmentPagerAdapter` and `FragmentStatePagerAdapter` are also included from the new `android.support.v13` package.
+### July 22, 2011
+Released `android-support-v4-r3-googlemaps.jar` based on revision 3 of the Android Compatibility Library (see downloads).  `FragmentPagerAdapter` and `FragmentStatePagerAdapter` are also included from the new `android.support.v13` package.
 
-* May 24, 2011 - Released `android-support-v4-r2-googlemaps.jar` based on revision 2 of the Android Compatibility Library (see downloads).
+### May 24, 2011
+Released `android-support-v4-r2-googlemaps.jar` based on revision 2 of the Android Compatibility Library (see downloads).
 
 ## Limitations
 Currently, one downside is that ALL classes extending `FragmentActivity` are `MapActivity`s.  Its possible to make a separate class (i.e. FragmentMapActivity), but it requires some refactoring of the FragmentActivity code.
