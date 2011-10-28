@@ -1,7 +1,8 @@
-<project name="android-support-v4-googlemaps" default="clean-build">
+<project name="android-support-v4-googlemaps" default="jar">
 	<property name="src.dir" value="src" />
 	<property name="build.dir" value="build" />
-	<property name="jar.file" value="${build.dir}/jar/android-support-v4-r3-googlemaps.jar" />
+	<property name="jar-v4.file" value="${build.dir}/jar/android-support-v4-r4-googlemaps.jar" />
+	<property name="jar-v13.file" value="${build.dir}/jar/android-support-v13-r4-googlemaps.jar" />
 
 	<path id="classpath">
 		<fileset dir="lib">
@@ -14,21 +15,38 @@
 	</target>
 
 	<target name="compile">
-		<mkdir dir="build/classes"/>
-		<javac srcdir="${src.dir}" destdir="${build.dir}/classes" includeantruntime="false">
+		<mkdir dir="${build.dir}/classes-v4"/>
+		<javac srcdir="${src.dir}" destdir="${build.dir}/classes-v4" includeantruntime="false">
 			<include name="java/**/*.java"/>
 			<include name="eclair/**/*.java"/>
 			<include name="froyo/**/*.java"/>
+			<include name="gingerbread/**/*.java"/>
 			<include name="honeycomb/**/*.java"/>
 			<include name="honeycomb_mr2/**/*.java"/>
+			<include name="ics/**/*.java"/>
+
+			<!-- Exclude classes that only ship in the v13 jar -->
+			<exclude name="java/android/support/v13/**/*.java"/>
+			<exclude name="ics/android/support/v13/**/*.java"/>
+			<classpath refid="classpath"/>
+		</javac>
+
+		<mkdir dir="${build.dir}/classes-v13"/>
+		<javac srcdir="${src.dir}" destdir="${build.dir}/classes-v13" includeantruntime="false">
+			<include name="java/**/*.java"/>
+			<include name="eclair/**/*.java"/>
+			<include name="froyo/**/*.java"/>
+			<include name="gingerbread/**/*.java"/>
+			<include name="honeycomb/**/*.java"/>
+			<include name="honeycomb_mr2/**/*.java"/>
+			<include name="ics/**/*.java"/>
 			<classpath refid="classpath"/>
 		</javac>
 	</target>
 
-	<target name="jar">
+	<target name="jar" depends="clean, compile">
 		<mkdir dir="${build.dir}/jar"/>
-		<jar destfile="${jar.file}" basedir="build/classes" />
+		<jar destfile="${jar-v4.file}" basedir="${build.dir}/classes-v4" />
+		<jar destfile="${jar-v13.file}" basedir="${build.dir}/classes-v13" />
 	</target>
-
-	<target name="clean-build" depends="clean,compile,jar" />
 </project>
