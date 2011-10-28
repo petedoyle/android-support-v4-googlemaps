@@ -16,7 +16,6 @@
 
 package android.support.v4.app;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -32,6 +31,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+
+import com.google.android.maps.MapActivity;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -59,7 +60,7 @@ import java.util.HashMap;
  * state, this may be a snapshot slightly before what the user last saw.</p>
  * </ul>
  */
-public class FragmentActivity extends Activity {
+public class FragmentActivity extends MapActivity {
     private static final String TAG = "FragmentActivity";
     
     private static final String FRAGMENTS_TAG = "android:support:fragments";
@@ -719,5 +720,10 @@ public class FragmentActivity extends Activity {
             lm.updateActivity(this);
         }
         return lm;
+    }
+
+    @Override
+    protected boolean isRouteDisplayed() {
+        return false;
     }
 }
