@@ -16,6 +16,7 @@
 
 package android.support.v4.app;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -31,8 +32,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
-
-import com.google.android.maps.MapActivity;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -60,7 +59,7 @@ import java.util.HashMap;
  * state, this may be a snapshot slightly before what the user last saw.</p>
  * </ul>
  */
-public class FragmentActivity extends MapActivity {
+public class FragmentActivity extends Activity {
     private static final String TAG = "FragmentActivity";
     
     private static final String FRAGMENTS_TAG = "android:support:fragments";
@@ -96,6 +95,7 @@ public class FragmentActivity extends MapActivity {
     boolean mResumed;
     boolean mStopped;
     boolean mReallyStopped;
+    boolean mRetaining;
 
     boolean mOptionsMenuInvalidated;
 
@@ -106,6 +106,7 @@ public class FragmentActivity extends MapActivity {
     
     static final class NonConfigurationInstances {
         Object activity;
+        Object custom;
         HashMap<String, Object> children;
         ArrayList<Fragment> fragments;
         HCSparseArray<LoaderManagerImpl> loaders;
@@ -258,7 +259,6 @@ public class FragmentActivity extends MapActivity {
             fragment.mContainerId = containerId;
             fragment.mTag = tag;
             fragment.mInLayout = true;
-            fragment.mImmediateActivity = this;
             fragment.mFragmentManager = mFragments;
             fragment.onInflate(this, attrs, fragment.mSavedFragmentState);
             mFragments.addFragment(fragment, true);
@@ -274,7 +274,6 @@ public class FragmentActivity extends MapActivity {
             // This fragment was retained from a previous instance; get it
             // going now.
             fragment.mInLayout = true;
-            fragment.mImmediateActivity = this;
             // If this fragment is newly instantiated (either right now, or
             // from last saved state), then give it the attributes to
             // initialize itself.
@@ -428,13 +427,16 @@ public class FragmentActivity extends MapActivity {
 
     /**
      * Retain all appropriate fragment and loader state.  You can NOT
-     * override this yourself!
+     * override this yourself!  Use {@link #onRetainCustomNonConfigurationInstance()}
+     * if you want to retain your own state.
      */
     @Override
     public final Object onRetainNonConfigurationInstance() {
         if (mStopped) {
             doReallyStop(true);
         }
+
+        Object custom = onRetainCustomNonConfigurationInstance();
 
         ArrayList<Fragment> fragments = mFragments.retainNonConfig();
         boolean retainLoaders = false;
@@ -451,12 +453,13 @@ public class FragmentActivity extends MapActivity {
                 }
             }
         }
-        if (fragments == null && !retainLoaders) {
+        if (fragments == null && !retainLoaders && custom == null) {
             return null;
         }
         
         NonConfigurationInstances nci = new NonConfigurationInstances();
         nci.activity = null;
+        nci.custom = custom;
         nci.children = null;
         nci.fragments = fragments;
         nci.loaders = mAllLoaderManagers;
@@ -484,6 +487,7 @@ public class FragmentActivity extends MapActivity {
         super.onStart();
 
         mStopped = false;
+        mReallyStopped = false;
         mHandler.removeMessages(MSG_REALLY_STOPPED);
 
         if (!mCreated) {
@@ -532,6 +536,24 @@ public class FragmentActivity extends MapActivity {
     // NEW METHODS
     // ------------------------------------------------------------------------
     
+    /**
+     * Use this instead of {@link #onRetainNonConfigurationInstance()}.
+     * Retrieve later with {@link #getLastCustomNonConfigurationInstance()}.
+     */
+    public Object onRetainCustomNonConfigurationInstance() {
+        return null;
+    }
+
+    /**
+     * Return the value previously returned from
+     * {@link #onRetainCustomNonConfigurationInstance()}.
+     */
+    public Object getLastCustomNonConfigurationInstance() {
+        NonConfigurationInstances nc = (NonConfigurationInstances)
+                getLastNonConfigurationInstance();
+        return nc != null ? nc.custom : null;
+    }
+
     void supportInvalidateOptionsMenu() {
         if (android.os.Build.VERSION.SDK_INT >= HONEYCOMB) {
             // If we are running on HC or greater, we can use the framework
@@ -583,8 +605,9 @@ public class FragmentActivity extends MapActivity {
     void doReallyStop(boolean retaining) {
         if (!mReallyStopped) {
             mReallyStopped = true;
+            mRetaining = retaining;
             mHandler.removeMessages(MSG_REALLY_STOPPED);
-            onReallyStop(retaining);
+            onReallyStop();
         }
     }
 
@@ -595,11 +618,11 @@ public class FragmentActivity extends MapActivity {
      * we need to know this, to know whether to retain fragments.  This will
      * tell us what we need to know.
      */
-    void onReallyStop(boolean retaining) {
+    void onReallyStop() {
         if (mLoadersStarted) {
             mLoadersStarted = false;
             if (mLoaderManager != null) {
-                if (!retaining) {
+                if (!mRetaining) {
                     mLoaderManager.doStop();
                 } else {
                     mLoaderManager.doRetain();
@@ -607,7 +630,7 @@ public class FragmentActivity extends MapActivity {
             }
         }
 
-        mFragments.dispatchReallyStop(retaining);
+        mFragments.dispatchReallyStop();
     }
 
     // ------------------------------------------------------------------------
@@ -659,10 +682,10 @@ public class FragmentActivity extends MapActivity {
         //Log.v(TAG, "invalidateFragmentIndex: index=" + index);
         if (mAllLoaderManagers != null) {
             LoaderManagerImpl lm = mAllLoaderManagers.get(index);
-            if (lm != null) {
+            if (lm != null && !lm.mRetaining) {
                 lm.doDestroy();
+                mAllLoaderManagers.remove(index);
             }
-            mAllLoaderManagers.remove(index);
         }
     }
     
@@ -696,10 +719,5 @@ public class FragmentActivity extends MapActivity {
             lm.updateActivity(this);
         }
         return lm;
-    }
-    
-    @Override
-    protected boolean isRouteDisplayed() {
-        return false;
     }
 }
