@@ -226,5 +226,6 @@
         <service android:name=".content.LocalServiceBroadcaster$LocalService"
                 android:stopWithTask="true" />
 
+        <uses-library android:name="com.google.android.maps" />
     </application>
 </manifest>
