@@ -1,0 +1,51 @@
+<project name="android-support-v4-googlemaps" default="jar">
+	<property name="src.dir" value="." />
+	<property name="build.dir" value="build" />
+	<property name="jar-v4.file" value="${build.dir}/jar/android-support-v4-r5-googlemaps.jar" />
+	<property name="jar-v13.file" value="${build.dir}/jar/android-support-v13-r5-googlemaps.jar" />
+
+	<path id="classpath">
+		<fileset dir="lib">
+			<include name="**/*.jar"/>
+		</fileset>
+	</path>
+
+	<target name="clean">
+		<delete dir="${build.dir}"/>
+	</target>
+
+	<target name="compile">
+		<mkdir dir="${build.dir}/classes-v4"/>
+		<javac destdir="${build.dir}/classes-v4" includeantruntime="false">
+			<src path="${src.dir}/v4" />
+			<include name="java/**/*.java"/>
+			<include name="eclair/**/*.java"/>
+			<include name="froyo/**/*.java"/>
+			<include name="gingerbread/**/*.java"/>
+			<include name="honeycomb/**/*.java"/>
+			<include name="honeycomb_mr2/**/*.java"/>
+			<include name="ics/**/*.java"/>
+			<classpath refid="classpath"/>
+		</javac>
+
+		<mkdir dir="${build.dir}/classes-v13"/>
+		<javac destdir="${build.dir}/classes-v13" includeantruntime="false">
+			<src path="${src.dir}/v4" />
+			<src path="${src.dir}/v13" />
+			<include name="java/**/*.java"/>
+			<include name="eclair/**/*.java"/>
+			<include name="froyo/**/*.java"/>
+			<include name="gingerbread/**/*.java"/>
+			<include name="honeycomb/**/*.java"/>
+			<include name="honeycomb_mr2/**/*.java"/>
+			<include name="ics/**/*.java"/>
+			<classpath refid="classpath"/>
+		</javac>
+	</target>
+
+	<target name="jar" depends="clean, compile">
+		<mkdir dir="${build.dir}/jar"/>
+		<jar destfile="${jar-v4.file}" basedir="${build.dir}/classes-v4" />
+		<jar destfile="${jar-v13.file}" basedir="${build.dir}/classes-v13" />
+	</target>
+</project>

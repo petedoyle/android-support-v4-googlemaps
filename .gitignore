@@ -1,0 +1,6 @@
+build/*
+bin/*
+
+# ignore vim temp files
+~*
+*.swp
