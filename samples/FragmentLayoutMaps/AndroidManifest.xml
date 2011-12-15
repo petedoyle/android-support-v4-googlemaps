@@ -3,7 +3,10 @@
       package="com.example.android.apis"
       android:versionCode="1"
       android:versionName="1.0">
-    
+
+    <uses-sdk android:minSdkVersion="5" android:targetSdkVersion="13" />
+    <supports-screens android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:anyDensity="true" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     
     <application android:label="@string/app_name">
