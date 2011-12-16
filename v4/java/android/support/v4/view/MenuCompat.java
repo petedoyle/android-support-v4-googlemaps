@@ -19,9 +19,11 @@ package android.support.v4.view;
 import android.view.MenuItem;
 
 /**
- * Helper for accessing newer features in menus.
+ * Helper for accessing features in {@link android.view.Menu}
+ * introduced after API level 4 in a backwards compatible fashion.
  */
 public class MenuCompat {
+
     /**
      * Interface for the full API.
      */
@@ -45,7 +47,7 @@ public class MenuCompat {
     static class HoneycombMenuVersionImpl implements MenuVersionImpl {
         @Override
         public boolean setShowAsAction(MenuItem item, int actionEnum) {
-            MenuCompatHoneycomb.setShowAsAction(item, actionEnum);
+            MenuItemCompatHoneycomb.setShowAsAction(item, actionEnum);
             return true;
         }
     }
@@ -66,8 +68,12 @@ public class MenuCompat {
 
     /**
      * Call {@link MenuItem#setShowAsAction(int) MenuItem.setShowAsAction()}.
-     * If running on a pre-{@android.os.Build.VERSION_CODES#HONEYCOMB} device,
+     * If running on a pre-{@link android.os.Build.VERSION_CODES#HONEYCOMB} device,
      * does nothing and returns false.  Otherwise returns true.
+     *
+     * @deprecated Use {@link MenuItemCompat#setShowAsAction(MenuItem, int)
+     *     MenuItemCompat.setShowAsAction(MenuItem, int)}
+
      */
     public static boolean setShowAsAction(MenuItem item, int actionEnum) {
         return IMPL.setShowAsAction(item, actionEnum);

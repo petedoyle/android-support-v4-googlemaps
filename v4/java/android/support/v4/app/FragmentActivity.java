@@ -40,8 +40,14 @@ import java.util.HashMap;
 import com.google.android.maps.MapActivity;
 
 /**
- * Base class for activities that want to use the support-based Fragment and
- * Loader APIs.
+ * Base class for activities that want to use the support-based
+ * {@link android.support.v4.app.Fragment} and
+ * {@link android.support.v4.content.Loader} APIs.
+ *
+ * <p>When using this class as opposed to new platform's built-in fragment
+ * and loader support, you must use the {@link #getSupportFragmentManager()}
+ * and {@link #getSupportLoaderManager()} methods respectively to access
+ * those features.
  *
  * <p>Known limitations:</p>
  * <ul>
@@ -56,7 +62,7 @@ import com.google.android.maps.MapActivity;
  * prior to Honeycomb, where the state is saved before pausing.  To address this,
  * when running on platforms prior to Honeycomb an exception will not be thrown
  * if you change fragments between the state save and the activity being stopped.
- * This means that is some cases if the activity is restored from its last saved
+ * This means that in some cases if the activity is restored from its last saved
  * state, this may be a snapshot slightly before what the user last saw.</p>
  * </ul>
  */

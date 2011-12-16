@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package android.support.v4.view;
+package android.support.v13.app;
 
-import android.view.MenuItem;
+import android.app.Fragment;
 
-/**
- * Implementation of menu compatibility that can call Honeycomb APIs.
- */
-class MenuCompatHoneycomb {
-    public static void setShowAsAction(MenuItem item, int actionEnum) {
-        item.setShowAsAction(actionEnum);
+class FragmentCompatICSMR1 {
+    public static void setUserVisibleHint(Fragment f, boolean isVisible) {
+        f.setUserVisibleHint(isVisible);
     }
 }

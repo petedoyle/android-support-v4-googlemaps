@@ -19,27 +19,41 @@ package android.support.v13.app;
 import android.app.Fragment;
 
 /**
- * Helper class for accessing newer features of Fragment.
+ * Helper for accessing features in {@link Fragment} introduced after
+ * API level 13 in a backwards compatible fashion.
  */
 public class FragmentCompat {
     interface FragmentCompatImpl {
         void setMenuVisibility(Fragment f, boolean visible);
+        void setUserVisibleHint(Fragment f, boolean deferStart);
     }
 
     static class BaseFragmentCompatImpl implements FragmentCompatImpl {
         public void setMenuVisibility(Fragment f, boolean visible) {
         }
+        public void setUserVisibleHint(Fragment f, boolean deferStart) {
+        }
     }
  
     static class ICSFragmentCompatImpl extends BaseFragmentCompatImpl {
+        @Override
         public void setMenuVisibility(Fragment f, boolean visible) {
             FragmentCompatICS.setMenuVisibility(f, visible);
         }
     }
 
+    static class ICSMR1FragmentCompatImpl extends ICSFragmentCompatImpl {
+        @Override
+        public void setUserVisibleHint(Fragment f, boolean deferStart) {
+            FragmentCompatICSMR1.setUserVisibleHint(f, deferStart);
+        }
+    }
+
     static final FragmentCompatImpl IMPL;
     static {
-        if (android.os.Build.VERSION.SDK_INT >= 14) {
+        if (android.os.Build.VERSION.SDK_INT >= 15) {
+            IMPL = new ICSMR1FragmentCompatImpl();
+        } else if (android.os.Build.VERSION.SDK_INT >= 14) {
             IMPL = new ICSFragmentCompatImpl();
         } else {
             IMPL = new BaseFragmentCompatImpl();
@@ -52,5 +66,13 @@ public class FragmentCompat {
      */
     public static void setMenuVisibility(Fragment f, boolean visible) {
         IMPL.setMenuVisibility(f, visible);
+    }
+
+    /**
+     * Call {@link Fragment#setUserVisibleHint(boolean) setUserVisibleHint(boolean)}
+     * if running on an appropriate version of the platform.
+     */
+    public static void setUserVisibleHint(Fragment f, boolean deferStart) {
+        IMPL.setUserVisibleHint(f, deferStart);
     }
 }
