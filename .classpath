@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src/java"/>
-	<classpathentry kind="src" path="src/eclair"/>
-	<classpathentry kind="src" path="src/froyo"/>
-	<classpathentry kind="src" path="src/gingerbread"/>
-	<classpathentry kind="src" path="src/honeycomb"/>
-	<classpathentry kind="src" path="src/honeycomb_mr2"/>
-	<classpathentry kind="src" path="src/ics"/>
+	<classpathentry kind="src" path="v4/java"/>
+	<classpathentry kind="src" path="v4/eclair"/>
+	<classpathentry kind="src" path="v4/froyo"/>
+	<classpathentry kind="src" path="v4/gingerbread"/>
+	<classpathentry kind="src" path="v4/honeycomb"/>
+	<classpathentry kind="src" path="v4/honeycomb_mr2"/>
+	<classpathentry kind="src" path="v4/ics"/>
+	<classpathentry kind="src" path="v13/java"/>
+	<classpathentry kind="src" path="v13/ics"/>
+	<classpathentry kind="src" path="v13/ics-mr1"/>
 	<classpathentry kind="var" path="JRE_LIB" sourcepath="JRE_SRC"/>
-	<classpathentry kind="lib" path="lib/android-14.jar"/>
-	<classpathentry kind="lib" path="lib/maps-14.jar"/>
+	<classpathentry kind="lib" path="lib/android-15.jar"/>
+	<classpathentry kind="lib" path="lib/maps-15.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
