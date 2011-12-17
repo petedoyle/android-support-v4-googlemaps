@@ -143,9 +143,9 @@ public class FragmentActivity extends MapActivity {
             if (frag == null) {
                 Log.w(TAG, "Activity result no fragment exists for index: 0x"
                         + Integer.toHexString(requestCode));
+                return;
             }
             frag.onActivityResult(requestCode&0xffff, resultCode, data);
-            return;
         }
         
         super.onActivityResult(requestCode, resultCode, data);
