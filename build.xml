@@ -1,8 +1,8 @@
 <project name="android-support-v4-googlemaps" default="jar">
 	<property name="src.dir" value="." />
 	<property name="build.dir" value="build" />
-	<property name="jar-v4.file" value="${build.dir}/jar/android-support-v4-r6-googlemaps.jar" />
-	<property name="jar-v13.file" value="${build.dir}/jar/android-support-v13-r6-googlemaps.jar" />
+	<property name="jar-v4.file" value="${build.dir}/jar/android-support-v4-r7-googlemaps.jar" />
+	<property name="jar-v13.file" value="${build.dir}/jar/android-support-v13-r7-googlemaps.jar" />
 
 	<path id="classpath">
 		<fileset dir="lib">
