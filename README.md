@@ -17,6 +17,9 @@ The default Ant target will build the jar and place it in the `build/jar` folder
 Alternatively, the source also includes an Eclipse project which you can use to add it as a build dependency for your project.  Import it into Eclipse using `File > Import > Existing Projects into Workspace...`, then configure the build path of your project to require the `android-support-v4-googlemaps` project.
 
 ## Changelog
+### March 28, 2012
+New release based on r7 of the Android Compatibility Library.
+
 ### December 16, 2011
 Released `android-support-v4-r6-googlemaps.jar` and `android-support-v13-r6-googlemaps.jar` based on revision 6 of the Android Compatibility Library.  This also includes a fix for Android [bug #22226](http://code.google.com/p/android/issues/detail?id=22226).
 
