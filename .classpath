@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="v4/java"/>
-	<classpathentry kind="src" path="v4/eclair"/>
-	<classpathentry kind="src" path="v4/froyo"/>
-	<classpathentry kind="src" path="v4/gingerbread"/>
-	<classpathentry kind="src" path="v4/honeycomb"/>
-	<classpathentry kind="src" path="v4/honeycomb_mr2"/>
-	<classpathentry kind="src" path="v4/ics"/>
-	<classpathentry kind="src" path="v13/java"/>
-	<classpathentry kind="src" path="v13/ics"/>
-	<classpathentry kind="src" path="v13/ics-mr1"/>
+	<classpathentry kind="src" path="support/v13/src/java"/>
+	<classpathentry kind="src" path="support/v4/src/jellybean"/>
+	<classpathentry kind="src" path="support/v13/src/ics"/>
+	<classpathentry kind="src" path="support/v4/src/java"/>
+	<classpathentry kind="src" path="support/v4/src/ics"/>
+	<classpathentry kind="src" path="support/v4/src/ics-mr1"/>
+	<classpathentry kind="src" path="support/v4/src/eclair"/>
+	<classpathentry kind="src" path="support/v4/src/gingerbread"/>
+	<classpathentry kind="src" path="support/v13/src/ics-mr1"/>
+	<classpathentry kind="src" path="support/v4/src/honeycomb_mr2"/>
+	<classpathentry kind="src" path="support/v4/src/froyo"/>
+	<classpathentry kind="src" path="support/v4/src/honeycomb"/>
 	<classpathentry kind="var" path="JRE_LIB" sourcepath="JRE_SRC"/>
-	<classpathentry kind="lib" path="lib/android-15.jar"/>
-	<classpathentry kind="lib" path="lib/maps-15.jar"/>
+	<classpathentry kind="lib" path="lib/android-16.jar"/>
+	<classpathentry kind="lib" path="lib/maps-16.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
-
