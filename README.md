@@ -17,23 +17,47 @@ The default Ant target will build the jar and place it in the `build/jar` folder
 Alternatively, the source also includes an Eclipse project which you can use to add it as a build dependency for your project.  Import it into Eclipse using `File > Import > Existing Projects into Workspace...`, then configure the build path of your project to require the `android-support-v4-googlemaps` project.
 
 ## Changelog
+### September 18, 2012
+**Revision 10**
+
+Based on r10 of the Android Support Library.  Google's changelog available [here](http://developer.android.com/tools/extras/support-library.html#SettingUp).
+
+This release also updates the build script so it'll be easier to keep in-sync with the official google releases.  The new process is very simple:
+
+* Download the newest Android Support Library release using the Android SDK Manager.
+* Delete and replace the `support/` folder with `$ANDROID_HOME/extras/android/support`
+* Re-customize `FragmentActivity` to extend `MapActivity` ([example](https://github.com/petedoyle/android-support-v4-googlemaps/commit/c8e271698e762c46cacf47fe10b3495122e75a69))
+* Build as usual, using '`ant`'
+
+In addition, the fix for Android [bug #22226](http://code.google.com/p/android/issues/detail?id=22226) has been included in Google's official release.  Because of that, this release is once again the exact Google release with only [this change](https://github.com/petedoyle/android-support-v4-googlemaps/commit/c8e271698e762c46cacf47fe10b3495122e75a69).
+
 ### March 28, 2012
+**Revision 7**
+
 New release based on r7 of the Android Compatibility Library.
 
 ### December 16, 2011
+**Revision 6**
+
 Released `android-support-v4-r6-googlemaps.jar` and `android-support-v13-r6-googlemaps.jar` based on revision 6 of the Android Compatibility Library.  This also includes a fix for Android [bug #22226](http://code.google.com/p/android/issues/detail?id=22226).
 
 This also includes the additions from Google's r5 release.  For the changelog of what changed in ACL r5 and r6, see http://developer.android.com/sdk/compatibility-library.html.
 
 ### October 27, 2011
+**Revision 4**
+
 Released `android-support-v4-r4-googlemaps.jar` and `android-support-v13-r4-googlemaps.jar` based on revision 4 of the Android Compatibility Library.  This release, like the official release from Google, splits the ACL into two jars (v4 and v13).  The v13 jar contains all the v4 classes _plus_ the classes in the `android.support.v13` package.
 
 For the changelog of what changed in ACL r4, see http://developer.android.com/sdk/compatibility-library.html.
 
 ### July 22, 2011
+**Revision 3**
+
 Released `android-support-v4-r3-googlemaps.jar` based on revision 3 of the Android Compatibility Library (see downloads).  `FragmentPagerAdapter` and `FragmentStatePagerAdapter` are also included from the new `android.support.v13` package.
 
 ### May 24, 2011
+**Revision 2**
+
 Released `android-support-v4-r2-googlemaps.jar` based on revision 2 of the Android Compatibility Library (see downloads).
 
 ## Limitations
