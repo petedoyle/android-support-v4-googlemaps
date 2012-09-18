@@ -19,13 +19,13 @@
 
 
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
     android:id="@+id/main">
     <!-- We must dynamically add the fragment or FragmentTransaction#replace(...) won't remove the fragment being replaced -->
     <!-- See http://stackoverflow.com/questions/5293850/fragment-duplication-on-fragment-transaction for more info -->
     <!-- Doesn't work:
         <fragment class="com.example.android.apis.app.FragmentLayout$TitlesFragment"
             android:id="@+id/titles"
-            android:layout_width="match_parent" android:layout_height="match_parent" />-->
+            android:layout_width="fill_parent" android:layout_height="fill_parent" />-->
 </FrameLayout>
