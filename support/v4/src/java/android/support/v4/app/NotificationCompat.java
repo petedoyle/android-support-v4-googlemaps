@@ -27,6 +27,10 @@ import android.os.Build;
 import android.widget.RemoteViews;
 import java.util.ArrayList;
 
+/**
+ * Helper for accessing features in {@link android.app.Notification}
+ * introduced after API level 4 in a backwards compatible fashion.
+ */
 public class NotificationCompat {
     /**
      * Obsolete flag indicating high-priority notifications; use the priority field instead.
@@ -146,7 +150,7 @@ public class NotificationCompat {
     static {
         if (Build.VERSION.SDK_INT >= 16) {
             IMPL = new NotificationCompatImplJellybean();
-        } else if (Build.VERSION.SDK_INT >= 13) {
+        } else if (Build.VERSION.SDK_INT >= 14) {
             IMPL = new NotificationCompatImplIceCreamSandwich();
         } else if (Build.VERSION.SDK_INT >= 11) {
             IMPL = new NotificationCompatImplHoneycomb();
@@ -633,6 +637,9 @@ public class NotificationCompat {
             return this;
         }
 
+        /**
+         * Provide the bitmap to be used as the payload for the BigPicture notification.
+         */
         public BigPictureStyle bigPicture(Bitmap b) {
             mPicture = b;
             return this;
@@ -684,6 +691,10 @@ public class NotificationCompat {
             return this;
         }
 
+        /**
+         * Provide the longer text to be displayed in the big form of the
+         * template in place of the content text.
+         */
         public BigTextStyle bigText(CharSequence cs) {
             mBigText = cs;
             return this;
@@ -738,6 +749,9 @@ public class NotificationCompat {
             return this;
         }
 
+        /**
+         * Append a line to the digest section of the Inbox notification.
+         */
         public InboxStyle addLine(CharSequence cs) {
             mTexts.add(cs);
             return this;

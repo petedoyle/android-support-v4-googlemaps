@@ -16,13 +16,81 @@
 
 package android.support.v4.content;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
 
 /**
  * Helper for accessing features in {@link android.content.Intent}
  * introduced after API level 4 in a backwards compatible fashion.
  */
 public class IntentCompat {
+
+    interface IntentCompatImpl {
+        Intent makeMainActivity(ComponentName componentName);
+        Intent makeMainSelectorActivity(String selectorAction, String selectorCategory);
+        Intent makeRestartActivityTask(ComponentName mainActivity);
+    }
+
+    static class IntentCompatImplBase implements IntentCompatImpl {
+        @Override
+        public Intent makeMainActivity(ComponentName componentName) {
+            Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.setComponent(componentName);
+            intent.addCategory(Intent.CATEGORY_LAUNCHER);
+            return intent;
+        }
+
+        @Override
+        public Intent makeMainSelectorActivity(String selectorAction,
+                String selectorCategory) {
+            // Before api 15 you couldn't set a selector intent.
+            // Fall back and just return an intent with the requested action/category,
+            // even though it won't be a proper "main" intent.
+            Intent intent = new Intent(selectorAction);
+            intent.addCategory(selectorCategory);
+            return intent;
+        }
+
+        @Override
+        public Intent makeRestartActivityTask(ComponentName mainActivity) {
+            Intent intent = makeMainActivity(mainActivity);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                    | IntentCompat.FLAG_ACTIVITY_CLEAR_TASK);
+            return intent;
+        }
+    }
+
+    static class IntentCompatImplHC extends IntentCompatImplBase {
+        @Override
+        public Intent makeMainActivity(ComponentName componentName) {
+            return IntentCompatHoneycomb.makeMainActivity(componentName);
+        }
+        @Override
+        public Intent makeRestartActivityTask(ComponentName componentName) {
+            return IntentCompatHoneycomb.makeRestartActivityTask(componentName);
+        }
+    }
+
+    static class IntentCompatImplIcsMr1 extends IntentCompatImplHC {
+        @Override
+        public Intent makeMainSelectorActivity(String selectorAction, String selectorCategory) {
+            return IntentCompatIcsMr1.makeMainSelectorActivity(selectorAction, selectorCategory);
+        }
+    }
+
+    private static final IntentCompatImpl IMPL;
+    static {
+        final int version = Build.VERSION.SDK_INT;
+        if (version >= 15) {
+            IMPL = new IntentCompatImplIcsMr1();
+        } else if (version >= 11) {
+            IMPL = new IntentCompatImplHC();
+        } else {
+            IMPL = new IntentCompatImplBase();
+        }
+    }
 
     private IntentCompat() {
         /* Hide constructor */
@@ -126,4 +194,75 @@ public class IntentCompat {
      * <p>This flag will only be obeyed on devices supporting API 11 or higher.</p>
      */
     public static final int FLAG_ACTIVITY_CLEAR_TASK = 0x00008000;
+
+    /**
+     * Create an intent to launch the main (root) activity of a task.  This
+     * is the Intent that is started when the application's is launched from
+     * Home.  For anything else that wants to launch an application in the
+     * same way, it is important that they use an Intent structured the same
+     * way, and can use this function to ensure this is the case.
+     *
+     * <p>The returned Intent has the given Activity component as its explicit
+     * component, {@link Intent#ACTION_MAIN ACTION_MAIN} as its action, and includes the
+     * category {@link Intent#CATEGORY_LAUNCHER CATEGORY_LAUNCHER}.  This does <em>not</em> have
+     * {@link Intent#FLAG_ACTIVITY_NEW_TASK FLAG_ACTIVITY_NEW_TASK} set,
+     * though typically you will want to do that through {@link Intent#addFlags(int) addFlags(int)}
+     * on the returned Intent.
+     *
+     * @param mainActivity The main activity component that this Intent will
+     * launch.
+     * @return Returns a newly created Intent that can be used to launch the
+     * activity as a main application entry.
+     *
+     * @see Intent#setClass
+     * @see Intent#setComponent
+     */
+    public static Intent makeMainActivity(ComponentName mainActivity) {
+        return IMPL.makeMainActivity(mainActivity);
+    }
+
+
+    /**
+     * Make an Intent for the main activity of an application, without
+     * specifying a specific activity to run but giving a selector to find
+     * the activity.  This results in a final Intent that is structured
+     * the same as when the application is launched from
+     * Home.  For anything else that wants to launch an application in the
+     * same way, it is important that they use an Intent structured the same
+     * way, and can use this function to ensure this is the case.
+     *
+     * <p>The returned Intent has {@link Intent#ACTION_MAIN} as its action, and includes the
+     * category {@link Intent#CATEGORY_LAUNCHER}.  This does <em>not</em> have
+     * {@link Intent#FLAG_ACTIVITY_NEW_TASK} set, though typically you will want
+     * to do that through {@link Intent#addFlags(int)} on the returned Intent.
+     *
+     * @param selectorAction The action name of the Intent's selector.
+     * @param selectorCategory The name of a category to add to the Intent's
+     * selector.
+     * @return Returns a newly created Intent that can be used to launch the
+     * activity as a main application entry.
+     *
+     * @see #setSelector(Intent)
+     */
+    public static Intent makeMainSelectorActivity(String selectorAction,
+            String selectorCategory) {
+        return IMPL.makeMainSelectorActivity(selectorAction, selectorCategory);
+    }
+
+    /**
+     * Make an Intent that can be used to re-launch an application's task
+     * in its base state.  This is like {@link #makeMainActivity(ComponentName)},
+     * but also sets the flags {@link Intent#FLAG_ACTIVITY_NEW_TASK} and
+     * {@link IntentCompat#FLAG_ACTIVITY_CLEAR_TASK}.
+     *
+     * @param mainActivity The activity component that is the root of the
+     * task; this is the activity that has been published in the application's
+     * manifest as the main launcher icon.
+     *
+     * @return Returns a newly created Intent that can be used to relaunch the
+     * activity's task in its root state.
+     */
+    public static Intent makeRestartActivityTask(ComponentName mainActivity) {
+        return IMPL.makeRestartActivityTask(mainActivity);
+    }
 }

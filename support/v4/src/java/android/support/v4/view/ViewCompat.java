@@ -16,7 +16,9 @@
 
 package android.support.v4.view;
 
+import android.graphics.Paint;
 import android.graphics.Rect;
+import android.os.Bundle;
 import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat;
 import android.support.v4.view.accessibility.AccessibilityNodeProviderCompat;
 import android.view.View;
@@ -61,6 +63,54 @@ public class ViewCompat {
      */
     public static final int IMPORTANT_FOR_ACCESSIBILITY_NO = 0x00000002;
 
+    /**
+     * Indicates that the view does not have a layer.
+     */
+    public static final int LAYER_TYPE_NONE = 0;
+
+    /**
+     * <p>Indicates that the view has a software layer. A software layer is backed
+     * by a bitmap and causes the view to be rendered using Android's software
+     * rendering pipeline, even if hardware acceleration is enabled.</p>
+     *
+     * <p>Software layers have various usages:</p>
+     * <p>When the application is not using hardware acceleration, a software layer
+     * is useful to apply a specific color filter and/or blending mode and/or
+     * translucency to a view and all its children.</p>
+     * <p>When the application is using hardware acceleration, a software layer
+     * is useful to render drawing primitives not supported by the hardware
+     * accelerated pipeline. It can also be used to cache a complex view tree
+     * into a texture and reduce the complexity of drawing operations. For instance,
+     * when animating a complex view tree with a translation, a software layer can
+     * be used to render the view tree only once.</p>
+     * <p>Software layers should be avoided when the affected view tree updates
+     * often. Every update will require to re-render the software layer, which can
+     * potentially be slow (particularly when hardware acceleration is turned on
+     * since the layer will have to be uploaded into a hardware texture after every
+     * update.)</p>
+     */
+    public static final int LAYER_TYPE_SOFTWARE = 1;
+
+    /**
+     * <p>Indicates that the view has a hardware layer. A hardware layer is backed
+     * by a hardware specific texture (generally Frame Buffer Objects or FBO on
+     * OpenGL hardware) and causes the view to be rendered using Android's hardware
+     * rendering pipeline, but only if hardware acceleration is turned on for the
+     * view hierarchy. When hardware acceleration is turned off, hardware layers
+     * behave exactly as {@link #LAYER_TYPE_SOFTWARE software layers}.</p>
+     *
+     * <p>A hardware layer is useful to apply a specific color filter and/or
+     * blending mode and/or translucency to a view and all its children.</p>
+     * <p>A hardware layer can be used to cache a complex view tree into a
+     * texture and reduce the complexity of drawing operations. For instance,
+     * when animating a complex view tree with a translation, a hardware layer can
+     * be used to render the view tree only once.</p>
+     * <p>A hardware layer can also be used to increase the rendering quality when
+     * rotation transformations are applied on a view. It can also be used to
+     * prevent potential clipping issues when applying 3D transforms on a view.</p>
+     */
+    public static final int LAYER_TYPE_HARDWARE = 2;
+
     interface ViewCompatImpl {
         public boolean canScrollHorizontally(View v, int direction);
         public boolean canScrollVertically(View v, int direction);
@@ -78,7 +128,12 @@ public class ViewCompat {
         public void postOnAnimationDelayed(View view, Runnable action, long delayMillis);
         public int getImportantForAccessibility(View view);
         public void setImportantForAccessibility(View view, int mode);
+        public boolean performAccessibilityAction(View view, int action, Bundle arguments);
         public AccessibilityNodeProviderCompat getAccessibilityNodeProvider(View view);
+        public void setLayerType(View view, int layerType, Paint paint);
+        public int getLayerType(View view);
+        public int getLabelFor(View view);
+        public void setLabelFor(View view, int id);;
     }
 
     static class BaseViewCompatImpl implements ViewCompatImpl {
@@ -134,8 +189,22 @@ public class ViewCompat {
         public void setImportantForAccessibility(View view, int mode) {
 
         }
+        public boolean performAccessibilityAction(View view, int action, Bundle arguments) {
+            return false;
+        }
         public AccessibilityNodeProviderCompat getAccessibilityNodeProvider(View view) {
             return null;
+        }
+        public void setLayerType(View view, int layerType, Paint paint) {
+        }
+        public int getLayerType(View view) {
+            return LAYER_TYPE_NONE;
+        }
+        public int getLabelFor(View view) {
+            return 0;
+        }
+        public void setLabelFor(View view, int id) {
+
         }
     }
 
@@ -153,6 +222,12 @@ public class ViewCompat {
     static class HCViewCompatImpl extends GBViewCompatImpl {
         long getFrameTime() {
             return ViewCompatHC.getFrameTime();
+        }
+        @Override public void setLayerType(View view, int layerType, Paint paint) {
+            ViewCompatHC.setLayerType(view, layerType, paint);
+        }
+        @Override public int getLayerType(View view)  {
+            return ViewCompatHC.getLayerType(view);
         }
     }
 
@@ -217,6 +292,10 @@ public class ViewCompat {
             ViewCompatJB.setImportantForAccessibility(view, mode);
         }
         @Override
+        public boolean performAccessibilityAction(View view, int action, Bundle arguments) {
+            return ViewCompatJB.performAccessibilityAction(view, action, arguments);
+        }
+        @Override
         public AccessibilityNodeProviderCompat getAccessibilityNodeProvider(View view) {
             Object compat = ViewCompatJB.getAccessibilityNodeProvider(view);
             if (compat != null) {
@@ -226,10 +305,25 @@ public class ViewCompat {
         }
     }
 
+    static class JbMr1ViewCompatImpl extends JBViewCompatImpl {
+
+        @Override
+        public int getLabelFor(View view) {
+            return ViewCompatJellybeanMr1.getLabelFor(view);
+        }
+
+        @Override
+        public void setLabelFor(View view, int id) {
+            ViewCompatJellybeanMr1.setLabelFor(view, id);
+        }
+    }
+
     static final ViewCompatImpl IMPL;
     static {
         final int version = android.os.Build.VERSION.SDK_INT;
-        if (version >= 16 || android.os.Build.VERSION.CODENAME.equals("JellyBean")) {
+        if (version >= 17) {
+            IMPL = new JbMr1ViewCompatImpl();
+        } else if (version >= 16) {
             IMPL = new JBViewCompatImpl();
         } else if (version >= 14) {
             IMPL = new ICSViewCompatImpl();
@@ -532,6 +626,24 @@ public class ViewCompat {
     }
 
     /**
+     * Performs the specified accessibility action on the view. For
+     * possible accessibility actions look at {@link AccessibilityNodeInfoCompat}.
+     * <p>
+     * If an {@link AccessibilityDelegateCompat} has been specified via calling
+     * {@link #setAccessibilityDelegate(View, AccessibilityDelegateCompat)} its
+     * {@link AccessibilityDelegateCompat#performAccessibilityAction(View, int, Bundle)}
+     * is responsible for handling this call.
+     * </p>
+     *
+     * @param action The action to perform.
+     * @param arguments Optional action arguments.
+     * @return Whether the action was performed.
+     */
+    public static boolean performAccessibilityAction(View view, int action, Bundle arguments) {
+        return IMPL.performAccessibilityAction(view, action, arguments);
+    }
+
+    /**
      * Gets the provider for managing a virtual view hierarchy rooted at this View
      * and reported to {@link android.accessibilityservice.AccessibilityService}s
      * that explore the window content.
@@ -556,5 +668,90 @@ public class ViewCompat {
      */
     public static AccessibilityNodeProviderCompat getAccessibilityNodeProvider(View view) {
         return IMPL.getAccessibilityNodeProvider(view);
+    }
+
+    /**
+     * <p>Specifies the type of layer backing this view. The layer can be
+     * {@link #LAYER_TYPE_NONE disabled}, {@link #LAYER_TYPE_SOFTWARE software} or
+     * {@link #LAYER_TYPE_HARDWARE hardware}.</p>
+     *
+     * <p>A layer is associated with an optional {@link android.graphics.Paint}
+     * instance that controls how the layer is composed on screen. The following
+     * properties of the paint are taken into account when composing the layer:</p>
+     * <ul>
+     * <li>{@link android.graphics.Paint#getAlpha() Translucency (alpha)}</li>
+     * <li>{@link android.graphics.Paint#getXfermode() Blending mode}</li>
+     * <li>{@link android.graphics.Paint#getColorFilter() Color filter}</li>
+     * </ul>
+     *
+     * <p>If this view has an alpha value set to < 1.0 by calling
+     * setAlpha(float), the alpha value of the layer's paint is replaced by
+     * this view's alpha value. Calling setAlpha(float) is therefore
+     * equivalent to setting a hardware layer on this view and providing a paint with
+     * the desired alpha value.<p>
+     *
+     * <p>Refer to the documentation of {@link #LAYER_TYPE_NONE disabled},
+     * {@link #LAYER_TYPE_SOFTWARE software} and {@link #LAYER_TYPE_HARDWARE hardware}
+     * for more information on when and how to use layers.</p>
+     *
+     * @param layerType The ype of layer to use with this view, must be one of
+     *        {@link #LAYER_TYPE_NONE}, {@link #LAYER_TYPE_SOFTWARE} or
+     *        {@link #LAYER_TYPE_HARDWARE}
+     * @param paint The paint used to compose the layer. This argument is optional
+     *        and can be null. It is ignored when the layer type is
+     *        {@link #LAYER_TYPE_NONE}
+     *
+     * @param view View to set the layer type for
+     * @param layerType The type of layer to use with this view, must be one of
+     *        {@link #LAYER_TYPE_NONE}, {@link #LAYER_TYPE_SOFTWARE} or
+     *        {@link #LAYER_TYPE_HARDWARE}
+     * @param paint The paint used to compose the layer. This argument is optional
+     *        and can be null. It is ignored when the layer type is
+     *        {@link #LAYER_TYPE_NONE}
+     */
+    public static void setLayerType(View view, int layerType, Paint paint) {
+        IMPL.setLayerType(view, layerType, paint);
+    }
+
+    /**
+     * Indicates what type of layer is currently associated with this view. By default
+     * a view does not have a layer, and the layer type is {@link #LAYER_TYPE_NONE}.
+     * Refer to the documentation of
+     * {@link #setLayerType(android.view.View, int, android.graphics.Paint)}
+     * for more information on the different types of layers.
+     *
+     * @param view The view to fetch the layer type from
+     * @return {@link #LAYER_TYPE_NONE}, {@link #LAYER_TYPE_SOFTWARE} or
+     *         {@link #LAYER_TYPE_HARDWARE}
+     *
+     * @see #setLayerType(android.view.View, int, android.graphics.Paint)
+     * @see #LAYER_TYPE_NONE
+     * @see #LAYER_TYPE_SOFTWARE
+     * @see #LAYER_TYPE_HARDWARE
+     */
+    public static int getLayerType(View view) {
+        return IMPL.getLayerType(view);
+    }
+
+    /**
+     * Gets the id of a view for which a given view serves as a label for
+     * accessibility purposes.
+     *
+     * @param view The view on which to invoke the corresponding method.
+     * @return The labeled view id.
+     */
+    public static int getLabelFor(View view) {
+        return IMPL.getLabelFor(view);
+    }
+
+    /**
+     * Sets the id of a view for which a given view serves as a label for
+     * accessibility purposes.
+     *
+     * @param view The view on which to invoke the corresponding method.
+     * @param labeledId The labeled view id.
+     */
+    public static void setLabelFor(View view, int labeledId) {
+        IMPL.setLabelFor(view, labeledId);
     }
 }

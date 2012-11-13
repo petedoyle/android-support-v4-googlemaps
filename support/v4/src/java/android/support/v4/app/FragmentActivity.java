@@ -16,29 +16,29 @@
 
 package android.support.v4.app;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Parcelable;
-import android.support.v4.util.SparseArrayCompat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import com.google.android.maps.MapActivity;
 
 /**
  * Base class for activities that want to use the support-based
@@ -67,10 +67,10 @@ import com.google.android.maps.MapActivity;
  * state, this may be a snapshot slightly before what the user last saw.</p>
  * </ul>
  */
-public class FragmentActivity extends MapActivity {
+public class FragmentActivity extends Activity {
     private static final String TAG = "FragmentActivity";
     
-    private static final String FRAGMENTS_TAG = "android:support:fragments";
+    static final String FRAGMENTS_TAG = "android:support:fragments";
     
     // This is the SDK API version of Honeycomb (3.0).
     private static final int HONEYCOMB = 11;
@@ -98,6 +98,12 @@ public class FragmentActivity extends MapActivity {
 
     };
     final FragmentManagerImpl mFragments = new FragmentManagerImpl();
+    final FragmentContainer mContainer = new FragmentContainer() {
+        @Override
+        public View findViewById(int id) {
+            return FragmentActivity.this.findViewById(id);
+        }
+    };
     
     boolean mCreated;
     boolean mResumed;
@@ -109,7 +115,7 @@ public class FragmentActivity extends MapActivity {
 
     boolean mCheckedForLoaderManager;
     boolean mLoadersStarted;
-    SparseArrayCompat<LoaderManagerImpl> mAllLoaderManagers;
+    HashMap<String, LoaderManagerImpl> mAllLoaderManagers;
     LoaderManagerImpl mLoaderManager;
     
     static final class NonConfigurationInstances {
@@ -117,7 +123,7 @@ public class FragmentActivity extends MapActivity {
         Object custom;
         HashMap<String, Object> children;
         ArrayList<Fragment> fragments;
-        SparseArrayCompat<LoaderManagerImpl> loaders;
+        HashMap<String, LoaderManagerImpl> loaders;
     }
     
     static class FragmentTag {
@@ -138,6 +144,7 @@ public class FragmentActivity extends MapActivity {
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        mFragments.noteStateNotSaved();
         int index = requestCode>>16;
         if (index != 0) {
             index--;
@@ -183,7 +190,7 @@ public class FragmentActivity extends MapActivity {
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        mFragments.attachActivity(this);
+        mFragments.attachActivity(this, mContainer, null);
         // Old versions of the platform didn't do this!
         if (getLayoutInflater().getFactory() == null) {
             getLayoutInflater().setFactory(this);
@@ -395,6 +402,22 @@ public class FragmentActivity extends MapActivity {
     }
 
     /**
+     * Handle onNewIntent() to inform the fragment manager that the
+     * state is not saved.  If you are handling new intents and may be
+     * making changes to the fragment state, you want to be sure to call
+     * through to the super-class here first.  Otherwise, if your state
+     * is saved but the activity is not stopped, you could get an
+     * onNewIntent() call which happens before onResume() and trying to
+     * perform fragment operations at that point will throw IllegalStateException
+     * because the fragment manager thinks the state is still saved.
+     */
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        mFragments.noteStateNotSaved();
+    }
+
+    /**
      * Dispatch onResume() to fragments.  Note that for better inter-operation
      * with older versions of the platform, at the point of this call the
      * fragments attached to the activity are <em>not</em> resumed.  This means
@@ -468,13 +491,17 @@ public class FragmentActivity extends MapActivity {
         if (mAllLoaderManagers != null) {
             // prune out any loader managers that were already stopped and so
             // have nothing useful to retain.
-            for (int i=mAllLoaderManagers.size()-1; i>=0; i--) {
-                LoaderManagerImpl lm = mAllLoaderManagers.valueAt(i);
-                if (lm.mRetaining) {
-                    retainLoaders = true;
-                } else {
-                    lm.doDestroy();
-                    mAllLoaderManagers.removeAt(i);
+            LoaderManagerImpl loaders[] = new LoaderManagerImpl[mAllLoaderManagers.size()];
+            mAllLoaderManagers.values().toArray(loaders);
+            if (loaders != null) {
+                for (int i=0; i<loaders.length; i++) {
+                    LoaderManagerImpl lm = loaders[i];
+                    if (lm.mRetaining) {
+                        retainLoaders = true;
+                    } else {
+                        lm.doDestroy();
+                        mAllLoaderManagers.remove(lm.mWho);
+                    }
                 }
             }
         }
@@ -528,7 +555,11 @@ public class FragmentActivity extends MapActivity {
             if (mLoaderManager != null) {
                 mLoaderManager.doStart();
             } else if (!mCheckedForLoaderManager) {
-                mLoaderManager = getLoaderManager(-1, mLoadersStarted, false);
+                mLoaderManager = getLoaderManager(null, mLoadersStarted, false);
+                // the returned loader manager may be a new one, so we have to start it
+                if ((mLoaderManager != null) && (!mLoaderManager.mStarted)) {
+                    mLoaderManager.doStart();
+                }
             }
             mCheckedForLoaderManager = true;
         }
@@ -536,10 +567,14 @@ public class FragmentActivity extends MapActivity {
         
         mFragments.dispatchStart();
         if (mAllLoaderManagers != null) {
-            for (int i=mAllLoaderManagers.size()-1; i>=0; i--) {
-                LoaderManagerImpl lm = mAllLoaderManagers.valueAt(i);
-                lm.finishRetain();
-                lm.doReportStart();
+            LoaderManagerImpl loaders[] = new LoaderManagerImpl[mAllLoaderManagers.size()];
+            mAllLoaderManagers.values().toArray(loaders);
+            if (loaders != null) {
+                for (int i=0; i<loaders.length; i++) {
+                    LoaderManagerImpl lm = loaders[i];
+                    lm.finishRetain();
+                    lm.doReportStart();
+                }
             }
         }
     }
@@ -630,6 +665,95 @@ public class FragmentActivity extends MapActivity {
             mLoaderManager.dump(prefix + "  ", fd, writer, args);
         }
         mFragments.dump(prefix, fd, writer, args);
+        writer.print(prefix); writer.println("View Hierarchy:");
+        dumpViewHierarchy(prefix + "  ", writer, getWindow().getDecorView());
+    }
+
+    private static String viewToString(View view) {
+        StringBuilder out = new StringBuilder(128);
+        out.append(view.getClass().getName());
+        out.append('{');
+        out.append(Integer.toHexString(System.identityHashCode(view)));
+        out.append(' ');
+        switch (view.getVisibility()) {
+            case View.VISIBLE: out.append('V'); break;
+            case View.INVISIBLE: out.append('I'); break;
+            case View.GONE: out.append('G'); break;
+            default: out.append('.'); break;
+        }
+        out.append(view.isFocusable() ? 'F' : '.');
+        out.append(view.isEnabled() ? 'E' : '.');
+        out.append(view.willNotDraw() ? '.' : 'D');
+        out.append(view.isHorizontalScrollBarEnabled()? 'H' : '.');
+        out.append(view.isVerticalScrollBarEnabled() ? 'V' : '.');
+        out.append(view.isClickable() ? 'C' : '.');
+        out.append(view.isLongClickable() ? 'L' : '.');
+        out.append(' ');
+        out.append(view.isFocused() ? 'F' : '.');
+        out.append(view.isSelected() ? 'S' : '.');
+        out.append(view.isPressed() ? 'P' : '.');
+        out.append(' ');
+        out.append(view.getLeft());
+        out.append(',');
+        out.append(view.getTop());
+        out.append('-');
+        out.append(view.getRight());
+        out.append(',');
+        out.append(view.getBottom());
+        final int id = view.getId();
+        if (id != View.NO_ID) {
+            out.append(" #");
+            out.append(Integer.toHexString(id));
+            final Resources r = view.getResources();
+            if (id != 0 && r != null) {
+                try {
+                    String pkgname;
+                    switch (id&0xff000000) {
+                        case 0x7f000000:
+                            pkgname="app";
+                            break;
+                        case 0x01000000:
+                            pkgname="android";
+                            break;
+                        default:
+                            pkgname = r.getResourcePackageName(id);
+                            break;
+                    }
+                    String typename = r.getResourceTypeName(id);
+                    String entryname = r.getResourceEntryName(id);
+                    out.append(" ");
+                    out.append(pkgname);
+                    out.append(":");
+                    out.append(typename);
+                    out.append("/");
+                    out.append(entryname);
+                } catch (Resources.NotFoundException e) {
+                }
+            }
+        }
+        out.append("}");
+        return out.toString();
+    }
+
+    private void dumpViewHierarchy(String prefix, PrintWriter writer, View view) {
+        writer.print(prefix);
+        if (view == null) {
+            writer.println("null");
+            return;
+        }
+        writer.println(viewToString(view));
+        if (!(view instanceof ViewGroup)) {
+            return;
+        }
+        ViewGroup grp = (ViewGroup)view;
+        final int N = grp.getChildCount();
+        if (N <= 0) {
+            return;
+        }
+        prefix = prefix + "  ";
+        for (int i=0; i<N; i++) {
+            dumpViewHierarchy(prefix, writer, grp.getChildAt(i));
+        }
     }
 
     void doReallyStop(boolean retaining) {
@@ -708,13 +832,13 @@ public class FragmentActivity extends MapActivity {
         super.startActivityForResult(intent, ((fragment.mIndex+1)<<16) + (requestCode&0xffff));
     }
     
-    void invalidateSupportFragmentIndex(int index) {
-        //Log.v(TAG, "invalidateFragmentIndex: index=" + index);
+    void invalidateSupportFragment(String who) {
+        //Log.v(TAG, "invalidateSupportFragment: who=" + who);
         if (mAllLoaderManagers != null) {
-            LoaderManagerImpl lm = mAllLoaderManagers.get(index);
+            LoaderManagerImpl lm = mAllLoaderManagers.get(who);
             if (lm != null && !lm.mRetaining) {
                 lm.doDestroy();
-                mAllLoaderManagers.remove(index);
+                mAllLoaderManagers.remove(who);
             }
         }
     }
@@ -731,28 +855,23 @@ public class FragmentActivity extends MapActivity {
             return mLoaderManager;
         }
         mCheckedForLoaderManager = true;
-        mLoaderManager = getLoaderManager(-1, mLoadersStarted, true);
+        mLoaderManager = getLoaderManager(null, mLoadersStarted, true);
         return mLoaderManager;
     }
     
-    LoaderManagerImpl getLoaderManager(int index, boolean started, boolean create) {
+    LoaderManagerImpl getLoaderManager(String who, boolean started, boolean create) {
         if (mAllLoaderManagers == null) {
-            mAllLoaderManagers = new SparseArrayCompat<LoaderManagerImpl>();
+            mAllLoaderManagers = new HashMap<String, LoaderManagerImpl>();
         }
-        LoaderManagerImpl lm = mAllLoaderManagers.get(index);
+        LoaderManagerImpl lm = mAllLoaderManagers.get(who);
         if (lm == null) {
             if (create) {
-                lm = new LoaderManagerImpl(this, started);
-                mAllLoaderManagers.put(index, lm);
+                lm = new LoaderManagerImpl(who, this, started);
+                mAllLoaderManagers.put(who, lm);
             }
         } else {
             lm.updateActivity(this);
         }
         return lm;
-    }
-
-    @Override
-    protected boolean isRouteDisplayed() {
-        return false;
     }
 }

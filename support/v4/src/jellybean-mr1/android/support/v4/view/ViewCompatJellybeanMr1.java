@@ -16,20 +16,18 @@
 
 package android.support.v4.view;
 
-import android.animation.ValueAnimator;
-import android.graphics.Paint;
 import android.view.View;
 
-class ViewCompatHC {
-    static long getFrameTime() {
-        return ValueAnimator.getFrameDelay();
+/**
+ * Jellybean MR1 - specific View API access.
+ */
+public class ViewCompatJellybeanMr1 {
+
+    public static int getLabelFor(View view) {
+        return view.getLabelFor();
     }
 
-    public static void setLayerType(View view, int layerType, Paint paint) {
-        view.setLayerType(layerType, paint);
-    }
-
-    public static int getLayerType(View view) {
-        return view.getLayerType();
+    public static void setLabelFor(View view, int id) {
+        view.setLabelFor(id);
     }
 }

@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 
-package android.support.v4.view;
+package android.support.v4.content;
 
-import android.animation.ValueAnimator;
-import android.graphics.Paint;
-import android.view.View;
+import android.content.Intent;
 
-class ViewCompatHC {
-    static long getFrameTime() {
-        return ValueAnimator.getFrameDelay();
+class IntentCompatIcsMr1 {
+
+    public static Intent makeMainSelectorActivity(String selectorAction, String selectorCategory) {
+        return Intent.makeMainSelectorActivity(selectorAction, selectorCategory);
     }
 
-    public static void setLayerType(View view, int layerType, Paint paint) {
-        view.setLayerType(layerType, paint);
-    }
-
-    public static int getLayerType(View view) {
-        return view.getLayerType();
-    }
 }
