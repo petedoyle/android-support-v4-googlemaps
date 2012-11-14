@@ -16,7 +16,6 @@
 
 package android.support.v4.app;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -39,6 +38,8 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import com.google.android.maps.MapActivity;
 
 /**
  * Base class for activities that want to use the support-based
@@ -67,7 +68,7 @@ import java.util.HashMap;
  * state, this may be a snapshot slightly before what the user last saw.</p>
  * </ul>
  */
-public class FragmentActivity extends Activity {
+public class FragmentActivity extends MapActivity {
     private static final String TAG = "FragmentActivity";
     
     static final String FRAGMENTS_TAG = "android:support:fragments";
@@ -412,7 +413,7 @@ public class FragmentActivity extends Activity {
      * because the fragment manager thinks the state is still saved.
      */
     @Override
-    protected void onNewIntent(Intent intent) {
+    public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         mFragments.noteStateNotSaved();
     }
@@ -874,4 +875,9 @@ public class FragmentActivity extends Activity {
         }
         return lm;
     }
+
+	@Override
+	protected boolean isRouteDisplayed() {
+		return false;
+	}
 }
