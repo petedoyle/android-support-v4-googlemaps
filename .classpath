@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="support/v13/src/java"/>
+	<classpathentry kind="src" path="support/v4/src/jellybean-mr1"/>
 	<classpathentry kind="src" path="support/v4/src/jellybean"/>
 	<classpathentry kind="src" path="support/v13/src/ics"/>
 	<classpathentry kind="src" path="support/v4/src/java"/>

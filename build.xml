@@ -27,6 +27,7 @@
 			<include name="ics/**/*.java"/>
 			<include name="ics-mr1/**/*.java"/>
 			<include name="jellybean/**/*.java"/>
+			<include name="jellybean-mr1/**/*.java"/>
 			<classpath refid="classpath"/>
 		</javac>
 
@@ -43,6 +44,7 @@
 			<include name="ics/**/*.java"/>
 			<include name="ics-mr1/**/*.java"/>
 			<include name="jellybean/**/*.java"/>
+			<include name="jellybean-mr1/**/*.java"/>
 			<classpath refid="classpath"/>
 		</javac>
 	</target>
