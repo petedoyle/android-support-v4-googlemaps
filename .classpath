@@ -14,7 +14,7 @@
 	<classpathentry kind="src" path="support/v4/src/froyo"/>
 	<classpathentry kind="src" path="support/v4/src/honeycomb"/>
 	<classpathentry kind="var" path="JRE_LIB" sourcepath="JRE_SRC"/>
-	<classpathentry kind="lib" path="lib/android-16.jar"/>
-	<classpathentry kind="lib" path="lib/maps-16.jar"/>
+	<classpathentry kind="lib" path="lib/android-17.jar"/>
+	<classpathentry kind="lib" path="lib/maps-17.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
