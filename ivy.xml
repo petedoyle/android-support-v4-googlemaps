@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
+
+	<info organisation="com/doylemedia" module="android-support-googlemaps" revision="11.0.0"/>
+
+	<publications xmlns:e="urn:ant.apache.org:ivy-extras">
+		<artifact name="android-support-v4-googlemaps" />
+		<artifact name="android-support-v13-googlemaps" />
+	</publications>
+
+	<dependencies/>
+</ivy-module>

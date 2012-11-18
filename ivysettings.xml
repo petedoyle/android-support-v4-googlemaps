@@ -1,0 +1,9 @@
+<ivysettings>
+	<credentials host="localhost" realm="Sonatype Nexus Repository Manager" username="${upload.user}" passwd="${upload.password}"/>
+	<caches defaultCacheDir="${user.home}/.ivy2/cache"/>
+	<resolvers>
+		<url name="nexus">
+			<artifact pattern="http://localhost:8071/nexus/content/repositories/releases/[organisation]/[module]/[artifact]/[revision]/[artifact]-[revision](-[classifier]).[ext]" />
+		</url>
+	</resolvers>
+</ivysettings>

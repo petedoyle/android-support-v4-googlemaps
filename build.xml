@@ -1,4 +1,4 @@
-<project name="android-support-v4-googlemaps" default="jar">
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="android-support-v4-googlemaps" default="jar">
 	<property name="src.dir" value="support" />
 	<property name="build.dir" value="build" />
 	<property name="jar-v4.file" value="${build.dir}/jar/android-support-v4-googlemaps.jar" />
@@ -53,5 +53,12 @@
 		<mkdir dir="${build.dir}/jar"/>
 		<jar destfile="${jar-v4.file}" basedir="${build.dir}/classes-v4" />
 		<jar destfile="${jar-v13.file}" basedir="${build.dir}/classes-v13" />
+	</target>
+
+	<target name="release">
+		<ivy:resolve/>
+		<ivy:publish resolver="nexus">
+			<artifacts pattern="${build.dir}/jar/[artifact].[ext]" />
+		</ivy:publish>
 	</target>
 </project>
