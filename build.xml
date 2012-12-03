@@ -55,9 +55,40 @@
 		<jar destfile="${jar-v13.file}" basedir="${build.dir}/classes-v13" />
 	</target>
 
-	<target name="release">
-		<ivy:resolve/>
-		<ivy:publish resolver="nexus">
+	<target name="release-local" description="Deploy existing build artifacts to the local Sonatype Nexus server's releases repo.">
+		<antcall target="do_release">
+			<param name="ivyresolver" value="nexus-local-release"/>
+		</antcall>
+	</target>
+
+	<target name="release-sonatype-snapshots" description="Deploy existing build artifacts to the Sonatype OSS Snapshot repo.">
+		<antcall target="do_release">
+			<param name="ivyresolver" value="sonatype-snapshots"/>
+		</antcall>
+	</target>
+
+	<target name="release-sonatype-staging" description="Deploy existing build artifacts to the Sonatype OSS Staging repo.">
+		<antcall target="do_release">
+			<param name="ivyresolver" value="sonatype-staging"/>
+		</antcall>
+	</target>
+
+	<target name="do_release">
+		<ivy:makepom
+			ivyfile="ivy.xml"
+			templatefile="pom.xml.template"
+			pomfile="${build.dir}/jar/pom.xml"
+			conf="default,runtime"
+			artifactPackaging="jar"
+			description="A port of the Android Compatibility package which makes FragmentActivity extend MapActivity. This is a hack to make it possible to use a MapView in a Fragment."
+			>
+
+			<mapping conf="default" scope="compile" />
+			<mapping conf="runtime" scope="runtime" />
+		</ivy:makepom>
+
+		<ivy:resolve />
+		<ivy:publish resolver="${ivyresolver}">
 			<artifacts pattern="${build.dir}/jar/[artifact].[ext]" />
 		</ivy:publish>
 	</target>

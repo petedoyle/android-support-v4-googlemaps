@@ -3,11 +3,11 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
 
-	<info organisation="com/doylemedia" module="android-support-googlemaps" revision="11.0.0"/>
+	<info organisation="com.github.petedoyle" module="android-support-googlemaps" revision="0.11.0"/>
 
-	<publications xmlns:e="urn:ant.apache.org:ivy-extras">
-		<artifact name="android-support-v4-googlemaps" />
-		<artifact name="android-support-v13-googlemaps" />
+	<publications>
+		<artifact name="android-support-v4-googlemaps" type="jar" />
+		<artifact name="android-support-v13-googlemaps" type="jar" />
 	</publications>
 
 	<dependencies/>
