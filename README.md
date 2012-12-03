@@ -17,6 +17,13 @@ The default Ant target will build the jar and place it in the `build/jar` folder
 Alternatively, the source also includes an Eclipse project which you can use to add it as a build dependency for your project.  Import it into Eclipse using `File > Import > Existing Projects into Workspace...`, then configure the build path of your project to require the `android-support-v4-googlemaps` project.
 
 ## Changelog
+### December 3, 2012
+**Revision 11**
+
+Based on r11 of the Android Support Library.  Google's changelog available [here](http://developer.android.com/tools/extras/support-library.html#SettingUp).
+
+This is likely the last release.  It is now recommended to use Google's official [MapFragment](http://android-developers.blogspot.com.br/2012/12/new-google-maps-android-api-now-part-of.html) (released today, 2012-12-03).
+
 ### September 18, 2012
 **Revision 10**
 
